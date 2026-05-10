@@ -1,10 +1,63 @@
-<script>
+<script lang="ts">
 	
-    let clicks = $state(0);
-	
+	import { onMount } from 'svelte';
+	let clicks: number = 0;
+	interface LocationData {
+		lat: number;
+		lon: number;
+		city: string;
+		source: 'browser' | 'ip';
+	}
+
+	let location: LocationData | null = null;
+	let loading = true;
+
+	// Fallback function using a free IP API
+	async function getIPLocation() {
+		try {
+			const res = await fetch('https://ipapi.co/json/');
+			const data = await res.json();
+			location = {
+			lat: data.latitude,
+			lon: data.longitude,
+			city: data.city,
+			source: 'ip'
+			};
+		} catch (e) {
+			console.error('IP Geolocation failed', e);
+		} finally {
+			loading = false;
+		}
+	}
+
+	onMount(() => {
+		if ('geolocation' in navigator) {
+			navigator.geolocation.getCurrentPosition(
+			(pos) => {
+				location = {
+				lat: pos.coords.latitude,
+				lon: pos.coords.longitude,
+				city: 'Precise Location',
+				source: 'browser'
+				};
+				loading = false;
+			},
+			(err) => {
+				// If denied or failed, use the fallback
+				console.warn('Browser geo denied, switching to IP...');
+				getIPLocation();
+			},
+			{ timeout: 5000 }
+		);
+	} else {
+		getIPLocation();
+	}
+	});
+
 	function addToClicks() {
 		clicks += 1;
 	}
+
 </script>
 
 <style>
@@ -27,6 +80,11 @@
 	<button type="button" class="btn btn-primary" onclick={addToClicks}>Clicked</button>
 	</div>
 	<p class="text-muted">{clicks} times.</p>
+	{#if loading}
+	<p>Determining your location...</p>
+	{:else if location}
+	<p>Coordinates: {location.lat}, {location.lon}</p>
+	{/if}
 </div>
 </section>
 
