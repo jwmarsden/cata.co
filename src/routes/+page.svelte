@@ -31,27 +31,7 @@
 	}
 
 	onMount(() => {
-		if ('geolocation' in navigator) {
-			navigator.geolocation.getCurrentPosition(
-			(pos) => {
-				location = {
-				lat: pos.coords.latitude,
-				lon: pos.coords.longitude,
-				city: 'Precise Location',
-				source: 'browser'
-				};
-				loading = false;
-			},
-			(err) => {
-				// If denied or failed, use the fallback
-				console.warn('Browser geo denied, switching to IP...');
-				getIPLocation();
-			},
-			{ timeout: 5000 }
-		);
-	} else {
 		getIPLocation();
-	}
 	});
 
 	function addToClicks() {
