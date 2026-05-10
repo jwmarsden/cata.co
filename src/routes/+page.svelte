@@ -16,7 +16,7 @@
 	let loading = $state(true);
 
 	onMount(() => {
-		source = new EventSource('/');
+		source = new EventSource('/api');
 		source.onmessage = (e) => {
 		click_count = parseInt(e.data);
 		};
@@ -27,7 +27,7 @@
 	});
 
 	async function handleClick() {
-		await fetch('/', { method: 'POST' });
+		await fetch('/api', { method: 'POST' });
 	}
 
 	async function getIPLocation() {
