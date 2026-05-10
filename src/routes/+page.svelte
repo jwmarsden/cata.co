@@ -1,7 +1,10 @@
 <script lang="ts">
 	
-	import { onMount } from 'svelte';
-	let clicks: number = 0;
+	import { onMount, onDestroy } from 'svelte';
+
+	let click_count = $state(0);
+	let source: EventSource;
+
 	interface LocationData {
 		lat: number;
 		lon: number;
@@ -9,10 +12,24 @@
 		source: 'browser' | 'ip';
 	}
 
-	let location: LocationData | null = null;
-	let loading = true;
+	let location: LocationData | null = $state(null);
+	let loading = $state(true);
 
-	// Fallback function using a free IP API
+	onMount(() => {
+		source = new EventSource('/');
+		source.onmessage = (e) => {
+		click_count = parseInt(e.data);
+		};
+	});
+
+	onDestroy(() => {
+		source?.close();
+	});
+
+	async function handleClick() {
+		await fetch('/', { method: 'POST' });
+	}
+
 	async function getIPLocation() {
 		try {
 			const res = await fetch('https://ipapi.co/json/');
@@ -33,11 +50,6 @@
 	onMount(() => {
 		getIPLocation();
 	});
-
-	function addToClicks() {
-		clicks += 1;
-	}
-
 </script>
 
 <style>
@@ -57,9 +69,9 @@
 	<h1>Very Humble Beginnings for CaTa</h1>
 	<p class="text-muted">A clean start with a calm ocean, mist, and amber palette.</p>
 	<div class="flex gap-1" style="justify-content: center; margin-top: 1.5rem;">
-	<button type="button" class="btn btn-primary" onclick={addToClicks}>Clicked</button>
+	<button type="button" class="btn btn-primary" onclick={handleClick}>Clicked</button>
 	</div>
-	<p class="text-muted">{clicks} times.</p>
+	<p class="text-muted">{click_count} times.</p>
 	{#if loading}
 	<p>Determining your location...</p>
 	{:else if location}
