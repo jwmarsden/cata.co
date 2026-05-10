@@ -14,14 +14,14 @@
 </style>
 
 <nav id="top">
-<a href="/" class="logo">Cata.co</a>
+<a href="/" class="logo">CaTa</a>
 <ul>
 	<li><a href="/" class="active">Home</a></li>
 </ul>
 </nav>
 <section>
 <div class="container text-center">
-	<h1>Very Humble Beginnings for Cata.co</h1>
+	<h1>Very Humble Beginnings for CaTa</h1>
 	<p class="text-muted">A clean start with a calm ocean, mist, and amber palette.</p>
 	<div class="flex gap-1" style="justify-content: center; margin-top: 1.5rem;">
 	<button type="button" class="btn btn-primary" onclick={addToClicks}>Clicked</button>
