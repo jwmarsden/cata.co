@@ -1,14 +1,20 @@
 <script lang="ts">
 	
 	import { onMount, onDestroy } from 'svelte';
+	import { SvelteMap } from 'svelte/reactivity';
 
-	let click_count = $state(0);
+	let clicking = $state(false);
+	let location_map = new SvelteMap<string, { city: string; latitude: number; longitude: number; count: number }>();
+
 	let source: EventSource;
+	let error = $state<string | null>(null);
+	let locating = $state(false);
 
 	interface LocationData {
-		lat: number;
-		lon: number;
 		city: string;
+		latitude: number;
+		longitude: number;
+		country: string;
 		source: 'browser' | 'ip';
 	}
 
@@ -18,7 +24,9 @@
 	onMount(() => {
 		source = new EventSource('/api');
 		source.onmessage = (e) => {
-		click_count = parseInt(e.data);
+			const data = JSON.parse(e.data);
+			location_map.set(data.city, { city: data.city, latitude: data.latitude, longitude: data.longitude, count: data.count });
+			//console.log('Received Location:', data.city, data.latitude, data.longitude, data.count);
 		};
 	});
 
@@ -26,24 +34,67 @@
 		source?.close();
 	});
 
-	async function handleClick() {
-		await fetch('/api', { method: 'POST' });
+	async function handleClick(location: LocationData | null) {
+		if (locating || !location) return;
+
+		clicking = true;
+
+		const latitude = location.latitude;
+		const longitude = location.longitude;
+		const city = location.city;
+		const country = location.country;
+
+		try {
+			const res = await fetch('/api', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ latitude, longitude, city, country })
+			});
+
+		if (res.status === 429) {
+			error = 'Too many clicks — slow down!';
+			setTimeout(() => error = '', 5000);
+		}
+
+		if (!res.ok) {
+			error =  'Something went wrong.'
+			setTimeout(() => error = '', 5000);
+		}
+
+		const data = await res.json();
+		//console.log('Server response:', data);
+
+		if (location_map.has(data.city)) {
+			location_map.set(data.city, { city: data.city, latitude: data.latitude, longitude: data.longitude, count: data.count });
+		} else {
+			location_map.set(data.city, { city: data.city, latitude: data.latitude, longitude: data.longitude, count: data.count });
+		}
+
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'Network error';
+			setTimeout(() => error = '', 5000);
+		} finally {
+			// 2s cooldown before allowing another click
+			setTimeout(() => clicking = false, 2000);
+		}
 	}
 
 	async function getIPLocation() {
+		locating = true
 		try {
 			const res = await fetch('https://ipapi.co/json/');
 			const data = await res.json();
 			location = {
-			lat: data.latitude,
-			lon: data.longitude,
+			latitude: data.latitude,
+			longitude: data.longitude,
 			city: data.city,
+			country: data.country_name,
 			source: 'ip'
 			};
 		} catch (e) {
 			console.error('IP Geolocation failed', e);
 		} finally {
-			loading = false;
+			locating = false;
 		}
 	}
 
@@ -65,19 +116,23 @@
 </ul>
 </nav>
 <section>
-<div class="container text-center">
-	<h1>Very Humble Beginnings for CaTa</h1>
-	<p class="text-muted">A clean start with a calm ocean, mist, and amber palette.</p>
-	<div class="flex gap-1" style="justify-content: center; margin-top: 1.5rem;">
-	<button type="button" class="btn btn-primary" onclick={handleClick}>Clicked</button>
+	<div class="container text-center">
+		<h1>Very Humble Beginnings for CaTa</h1>
+		<p class="text-muted">A clean start with a calm ocean, mist, and amber palette.</p>
+		<div class="flex gap-1" style="justify-content: center; margin-top: 1.5rem;">
+			<button type="button" class="btn btn-primary" onclick={() => handleClick(location)} disabled={clicking || locating}>Click?</button>
+		</div>
+		{#if error}
+			<p class="error">{error}</p>
+		{/if}
 	</div>
-	<p class="text-muted">{click_count} times.</p>
-	{#if loading}
-	<p>Determining your location...</p>
-	{:else if location}
-	<p>Coordinates: {location.lat}, {location.lon}</p>
-	{/if}
-</div>
+	<div class="container text-center">
+		<ul class="list-centered mb-4">
+			{#each location_map.entries() as [city, location_clicks] }
+				<li>{city}: {location_clicks.count}</li>
+			{/each}
+			</ul>
+	</div>
 </section>
 
 <hr>
