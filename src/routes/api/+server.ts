@@ -7,6 +7,32 @@ import { isRateLimited } from '$lib/server/rateLimit';
 // SSE client registry
 const clients = new Map<string, Set<ReadableStreamDefaultController>>();
 
+interface LocationData {
+  city: string;
+  latitude: number;
+  longitude: number;
+  country: string;
+}
+
+async function getIPLocation(ip : string) : Promise<LocationData | undefined> {
+  try {
+    console.log(`http://ip-api.com/json/${ip}`)
+    const res = await fetch(`http://ip-api.com/json/${ip}`);
+    const data = await res.json();
+    const location: LocationData = {
+      latitude: data.lat,
+      longitude: data.lon,
+      city: data.city,
+      country: data.country,
+    };
+    return location
+  } catch (e) {
+    console.error('IP Geolocation failed', e);
+  } finally {
+  }
+  
+}
+
 function broadcast(city: string, country: string, latitude: number, longitude: number, count: number) {
   const cityClients = clients.get(city);
   if (!cityClients) return;
@@ -85,31 +111,38 @@ export const GET: RequestHandler = async ({ url }) => {
 };
 
 // POST — receive click with coords, reverse geocode, upsert counter
-export const POST: RequestHandler = async ({ request, getClientAddress }) => {
-  console.log('Post:' + request);
+export const POST: RequestHandler = async ({getClientAddress}) => {
+  console.log('Received POST request to /api'); 
+
   // Rate limiting
-  const ip = getClientAddress();
+  let ip = getClientAddress();
+  if (ip === '::1' || ip === '127.0.0.1') {
+    console.log('Localhost request received');
+    ip = '8.8.8.8'
+  }
   if (isRateLimited(ip)) {
     return new Response('Too many requests', { status: 429 });
   }
 
-  //console.log('Incoming request from IP:', ip);
+  const ip_details = await getIPLocation(ip);
+
+  console.log('Incoming request from IP:', ip, " Details:", ip_details);
+
 
   // Parse and validate body
   let latitude: number, longitude: number, city: string, country: string;
   try {
-    const body = await request.json();
-    city = body.city;
-    country = body.country;
-    latitude = parseFloat(body.latitude);
-    longitude = parseFloat(body.longitude);
+    city = ip_details?.city ?? 'Unknown';
+    country = ip_details?.country ?? 'Unknown';
+    latitude = ip_details?.latitude ?? NaN;
+    longitude = ip_details?.longitude ?? NaN;
 
     if (isNaN(latitude) || isNaN(longitude)) {
-      console.log('Invalid coordinates:', body.latitude, body.longitude);
+      console.log('Invalid coordinates:', latitude, longitude);
       throw new Error();
     }
     if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-      console.log('Coordinates out of bounds:', body.latitude, body.longitude);
+      console.log('Coordinates out of bounds:', latitude, longitude);
       throw new Error();
     }
   } catch {

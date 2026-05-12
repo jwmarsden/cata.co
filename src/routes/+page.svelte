@@ -35,20 +35,14 @@
 	});
 
 	async function handleClick(location: LocationData | null) {
-		if (locating || !location) return;
 
 		clicking = true;
 
-		const latitude = location.latitude;
-		const longitude = location.longitude;
-		const city = location.city;
-		const country = location.country;
 
 		try {
 			const res = await fetch('/api', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ latitude, longitude, city, country })
+				headers: { 'Content-Type': 'application/json' }
 			});
 
 		if (res.status === 429) {
@@ -62,7 +56,6 @@
 		}
 
 		const data = await res.json();
-		//console.log('Server response:', data);
 
 		if (location_map.has(data.city)) {
 			location_map.set(data.city, { city: data.city, latitude: data.latitude, longitude: data.longitude, count: data.count });
@@ -79,27 +72,7 @@
 		}
 	}
 
-	async function getIPLocation() {
-		locating = true
-		try {
-			const res = await fetch('https://ipapi.co/json/');
-			const data = await res.json();
-			location = {
-			latitude: data.latitude,
-			longitude: data.longitude,
-			city: data.city,
-			country: data.country_name,
-			source: 'ip'
-			};
-		} catch (e) {
-			console.error('IP Geolocation failed', e);
-		} finally {
-			locating = false;
-		}
-	}
-
 	onMount(() => {
-		getIPLocation();
 	});
 </script>
 
