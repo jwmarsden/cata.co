@@ -111,11 +111,12 @@ export const GET: RequestHandler = async ({ url }) => {
 };
 
 // POST — receive click with coords, reverse geocode, upsert counter
-export const POST: RequestHandler = async ({getClientAddress}) => {
+export const POST: RequestHandler = async ({ request, getClientAddress }) => {
   console.log('Received POST request to /api'); 
 
+  const forwarded = request.headers.get('x-forwarded-for');
+  let ip = forwarded ? forwarded.split(',')[0].trim() : getClientAddress();
   // Rate limiting
-  let ip = getClientAddress();
   if (ip === '::1' || ip === '127.0.0.1') {
     console.log('Localhost request received');
     ip = '8.8.8.8'
