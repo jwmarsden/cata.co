@@ -4,7 +4,7 @@
 	import { SvelteMap } from 'svelte/reactivity';
 
 	let clicking = $state(false);
-	let location_map = new SvelteMap<string, { city: string; latitude: number; longitude: number; count: number }>();
+	let location_map = new SvelteMap<string, { city: string; country: string; latitude: number; longitude: number; count: number }>();
 
 	let source: EventSource;
 	let error = $state<string | null>(null);
@@ -25,7 +25,7 @@
 		source = new EventSource('/api');
 		source.onmessage = (e) => {
 			const data = JSON.parse(e.data);
-			location_map.set(data.city, { city: data.city, latitude: data.latitude, longitude: data.longitude, count: data.count });
+			location_map.set(data.city, { city: data.city, country: data.country, latitude: data.lat, longitude: data.lon, count: data.count });
 			//console.log('Received Location:', data.city, data.latitude, data.longitude, data.count);
 		};
 	});
@@ -37,8 +37,6 @@
 	async function handleClick(location: LocationData | null) {
 
 		clicking = true;
-
-
 		try {
 			const res = await fetch('/api', {
 				method: 'POST',
@@ -58,17 +56,17 @@
 		const data = await res.json();
 
 		if (location_map.has(data.city)) {
-			location_map.set(data.city, { city: data.city, latitude: data.latitude, longitude: data.longitude, count: data.count });
+			location_map.set(data.city, { city: data.city, country: data.country, latitude: data.lat, longitude: data.lon, count: data.count });
 		} else {
-			location_map.set(data.city, { city: data.city, latitude: data.latitude, longitude: data.longitude, count: data.count });
+			location_map.set(data.city, { city: data.city, country: data.country, latitude: data.lat, longitude: data.lon, count: data.count });
 		}
 
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Network error';
 			setTimeout(() => error = '', 5000);
 		} finally {
-			// 2s cooldown before allowing another click
-			setTimeout(() => clicking = false, 2000);
+			// 1s cooldown before allowing another click
+			setTimeout(() => clicking = false, 1000);
 		}
 	}
 
@@ -102,7 +100,7 @@
 	<div class="container text-center">
 		<ul class="list-centered mb-4">
 			{#each location_map.entries() as [city, location_clicks] }
-				<li>{city}: {location_clicks.count}</li>
+				<li>{city}, {location_clicks.country}: {location_clicks.count}</li>
 			{/each}
 			</ul>
 	</div>

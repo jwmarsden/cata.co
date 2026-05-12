@@ -1,5 +1,5 @@
 const rateLimits = new Map<string, { count: number; resetAt: number }>();
-const LIMIT = 5;
+const LIMIT = 2;
 const WINDOW_MS = 10_000;
 
 // Clean up old entries periodically to prevent memory leaks
