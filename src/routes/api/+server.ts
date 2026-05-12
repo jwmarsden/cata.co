@@ -51,6 +51,7 @@ export const GET: RequestHandler = async ({ url }) => {
       }
     });
   } else {
+    console.log('Query All Cities');
     let controller: ReadableStreamDefaultController;
     const cities: string[] = [];
     const allLocations = await db.select().from(location_counter);
@@ -60,7 +61,7 @@ export const GET: RequestHandler = async ({ url }) => {
         for (const location of allLocations) {
           const city = location.city;
           cities.push(city); 
-          //console.log(location.id, location.city, location.location, location.count);
+          console.log(location.id, location.city, location.location, location.count);
           if (!clients.has(location.city)) clients.set(location.city, new Set());
           clients.get(location.city)!.add(controller);
           controller.enqueue(`data: ${JSON.stringify({ city: location.city, latitude: location.location?.y, longitude: location.location?.x, srid: 4326,count: location.count })}\n\n`);
@@ -85,6 +86,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
 // POST — receive click with coords, reverse geocode, upsert counter
 export const POST: RequestHandler = async ({ request, getClientAddress }) => {
+  console.log('Post:' + request);
   // Rate limiting
   const ip = getClientAddress();
   if (isRateLimited(ip)) {
