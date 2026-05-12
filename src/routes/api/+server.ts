@@ -121,7 +121,7 @@ export const POST: RequestHandler = async ({getClientAddress}) => {
     ip = '8.8.8.8'
   }
   if (isRateLimited(ip)) {
-    return new Response('Too many requests', { status: 429 });
+    return new Response('Too many requests. And Max sucks.', { status: 429 });
   }
 
   const ip_details = await getIPLocation(ip);
