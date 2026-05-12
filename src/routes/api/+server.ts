@@ -90,7 +90,7 @@ export const GET: RequestHandler = async ({ url }) => {
           console.log(location.id, location.city, location.location, location.count);
           if (!clients.has(location.city)) clients.set(location.city, new Set());
           clients.get(location.city)!.add(controller);
-          controller.enqueue(`data: ${JSON.stringify({ city: location.city, latitude: location.location?.y, longitude: location.location?.x, srid: 4326,count: location.count })}\n\n`);
+          controller.enqueue(`data: ${JSON.stringify({ city: location.city, country: location.country, latitude: location.location?.y, longitude: location.location?.x, srid: 4326,count: location.count })}\n\n`);
         }
       },
       cancel() {
