@@ -81,18 +81,45 @@
 	onMount(() => {
 		map = new maplibregl.Map({
 			container: 'map', // container id
-			style: 'https://tiles.openfreemap.org/styles/bright', // style URL
-			center: [0,0], // starting position [lng, lat]
-			zoom: 5, // starting zoom
+			 style: {
+				'version': 8,
+				'projection': {
+					'type': 'globe'
+				},
+				'sources': {
+					'satellite': {
+						'tiles': ['https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg'],
+						'type': 'raster'
+					},
+				},
+				'layers': [
+					{
+						'id': 'Satellite',
+						'type': 'raster',
+						'source': 'satellite',
+					},
+				],
+				'sky': {
+					'atmosphere-blend': [
+						'interpolate',
+						['linear'],
+						['zoom'],
+						0, 1,
+						5, 1,
+						7, 0
+					]
+				},
+				'light': {
+					'anchor': 'map',
+					'position': [1.5, 90, 80]
+				}
+			},
+			//center: [0,0], // starting position [lng, lat]
+			zoom: 2, // starting zoom
 			cooperativeGestures: true,
 			maplibreLogo: false,
 		});
 
-		map.on('style.load', () => {
-			map.setProjection({
-				type: 'globe', // Set projection to globe
-			});
-		});
 		map.addControl(new maplibregl.FullscreenControl());
 		map.addControl(new maplibregl.NavigationControl());
 
@@ -102,6 +129,9 @@
 			target: componentDom,
 			props: {initial: 13}
 		})
+
+		setTimeout(() => onTick(), 1000);
+		
 
 	});
 
@@ -115,12 +145,17 @@
 		if (!randomValue) return;
 
 		console.log('Random Location:', randomValue);
-		map.flyTo({ center: [randomValue.longitude, randomValue.latitude], zoom: 8, essential: true })
+		map.flyTo({ 
+			center: [randomValue.longitude, randomValue.latitude], 
+			zoom: 12, 
+			speed: 0.5,
+			essential: true 
+		})
 
 		working = false;
 	}
 	
-	let ms = 10000
+	let ms = 20000
 	let counter = 0
 	
 	let clear
@@ -172,6 +207,7 @@
 		text-align: center;
 		height: 400px;
 		width: 90%;
+		background-color: black;
 	}
 </style>
 
