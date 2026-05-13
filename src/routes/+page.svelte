@@ -64,9 +64,9 @@
 		const data = await res.json();
 
 		if (location_map.has(data.city)) {
-			location_map.set(data.city, { city: data.city, country: data.country, latitude: data.lat, longitude: data.lon, count: data.count });
+			location_map.set(data.city, { city: data.city, country: data.country, latitude: data.latitude, longitude: data.longitude, count: data.count });
 		} else {
-			location_map.set(data.city, { city: data.city, country: data.country, latitude: data.lat, longitude: data.lon, count: data.count });
+			location_map.set(data.city, { city: data.city, country: data.country, latitude: data.latitude, longitude: data.longitude, count: data.count });
 		}
 
 		} catch (e) {
