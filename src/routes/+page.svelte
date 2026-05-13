@@ -88,6 +88,11 @@
 			maplibreLogo: false,
 		});
 
+		map.on('style.load', () => {
+			map.setProjection({
+				type: 'globe', // Set projection to globe
+			});
+		});
 		map.addControl(new maplibregl.FullscreenControl());
 		map.addControl(new maplibregl.NavigationControl());
 
