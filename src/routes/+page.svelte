@@ -7,7 +7,7 @@
 	import Component from "./Component.svelte"
 	
 	let mapContainer
-	let map
+	let map: maplibregl.Map
 	let componentMount
 
 	let clicking = $state(false);
@@ -32,8 +32,9 @@
 		source = new EventSource('/api');
 		source.onmessage = (e) => {
 			const data = JSON.parse(e.data);
-			location_map.set(data.city, { city: data.city, country: data.country, latitude: data.lat, longitude: data.lon, count: data.count });
+			location_map.set(data.city, { city: data.city, country: data.country, latitude: data.latitude, longitude: data.longitude, count: data.count });
 			//console.log('Received Location:', data.city, data.latitude, data.longitude, data.count);
+			
 		};
 	});
 
@@ -81,10 +82,13 @@
 		map = new maplibregl.Map({
 			container: 'map', // container id
 			style: 'https://tiles.openfreemap.org/styles/bright', // style URL
-			center: [138.6008, -34.9285], // starting position [lng, lat]
+			center: [0,0], // starting position [lng, lat]
 			zoom: 5, // starting zoom
-			maplibreLogo: true
+			cooperativeGestures: true,
+			maplibreLogo: false,
 		});
+
+		map.addControl(new maplibregl.FullscreenControl());
 		map.addControl(new maplibregl.NavigationControl());
 
 		// mount the Svelte component
@@ -95,6 +99,34 @@
 		})
 
 	});
+
+	function onTick() {
+		counter += 1
+		if (location_map.size === 0) return;
+		const keys = location_map.keys().toArray();
+		
+		const randomIndex = Math.floor(Math.random() * keys.length);   		
+    	const randomValue = location_map.get(keys[randomIndex]);
+		if (!randomValue) return;
+
+		console.log('Random Location:', randomValue);
+		map.flyTo({ center: [randomValue.longitude, randomValue.latitude], zoom: 8, essential: true })
+
+		working = false;
+	}
+	
+	let ms = 10000
+	let counter = 0
+	
+	let clear
+	let working: boolean = false
+	onTick();
+	if (!working) {
+		working = true;
+		//clearInterval(clear)
+		clear = setInterval(onTick, ms)
+	}
+
 </script>
 
 <svelte:head>
@@ -134,7 +166,7 @@
 		margin-right: auto;
 		text-align: center;
 		height: 400px;
-		width: 80%;
+		width: 90%;
 	}
 </style>
 
@@ -159,7 +191,7 @@
 	<div class="container text-center">
 		<ul class="list-centered mb-4">
 			{#each location_map.entries() as [city, location_clicks] }
-				<li>{city}, {location_clicks.country}: {location_clicks.count}</li>
+				<li>{city}, {location_clicks.country}: {location_clicks.count} ({location_clicks.latitude}, {location_clicks.longitude})</li>
 			{/each}
 			</ul>
 	</div>

@@ -55,6 +55,9 @@ export const GET: RequestHandler = async ({ url }) => {
     const x = location?.x;
     const y = location?.y;
     const currentCount = row?.count ?? 0;
+
+
+
     let controller: ReadableStreamDefaultController;
     const stream = new ReadableStream({
     start(c) {
@@ -87,10 +90,14 @@ export const GET: RequestHandler = async ({ url }) => {
         for (const location of allLocations) {
           const city = location.city;
           cities.push(city); 
-          console.log(location.id, location.city, location.location, location.count);
+
+          const latitude = location.location?.y;
+          const longitude = location.location?.x;
+
+          console.log(location.id, location.city, latitude, longitude, location.count);
           if (!clients.has(location.city)) clients.set(location.city, new Set());
           clients.get(location.city)!.add(controller);
-          controller.enqueue(`data: ${JSON.stringify({ city: location.city, country: location.country, latitude: location.location?.y, longitude: location.location?.x, srid: 4326,count: location.count })}\n\n`);
+          controller.enqueue(`data: ${JSON.stringify({ city: location.city, country: location.country, latitude: latitude, longitude: longitude, srid: 4326,count: location.count })}\n\n`);
         }
       },
       cancel() {
@@ -167,6 +174,6 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
   // Broadcast updated count to all clients watching this city
   broadcast(city, row.country, row.location?.y, row.location?.x, row.count);
 
-  //console.log(`Updated count for ${city}: ${row.count}`);
+  console.log(`Updated count for ${row.city} ${row.country} ${row.location?.y}, ${row.location?.x}: ${row.count}`);
   return Response.json({ city: row.city, country: row.country, latitude: row.location?.y, longitude: row.location?.x, count: row.count });
 };
