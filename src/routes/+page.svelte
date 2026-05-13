@@ -78,7 +78,7 @@
 	}
 
 	onMount(() => {
-		const map = new maplibregl.Map({
+		map = new maplibregl.Map({
 			container: 'map', // container id
 			style: 'https://tiles.openfreemap.org/styles/bright', // style URL
 			center: [138.6008, -34.9285], // starting position [lng, lat]
@@ -127,6 +127,7 @@
 	}
 
 	#map {
+		border: 1px solid #ccc;
 		margin-top: 10px;
 		margin-bottom: 10px;
 		margin-left: auto;
