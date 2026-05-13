@@ -196,7 +196,7 @@
 	<div class="container text-center">
 		<ul class="list-centered mb-4">
 			{#each location_map.entries() as [city, location_clicks] }
-				<li>{city}, {location_clicks.country}: {location_clicks.count} ({location_clicks.latitude}, {location_clicks.longitude})</li>
+				<li>{city}, {location_clicks.country}: {location_clicks.count}</li>
 			{/each}
 			</ul>
 	</div>
