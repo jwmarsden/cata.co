@@ -1,7 +1,14 @@
 <script lang="ts">
 	
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, mount, unmount, onDestroy } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
+
+	import maplibregl from 'maplibre-gl'
+	import Component from "./Component.svelte"
+	
+	let mapContainer
+	let map
+	let componentMount
 
 	let clicking = $state(false);
 	let location_map = new SvelteMap<string, { city: string; country: string; latitude: number; longitude: number; count: number }>();
@@ -71,12 +78,62 @@
 	}
 
 	onMount(() => {
+		const map = new maplibregl.Map({
+			container: 'map', // container id
+			style: 'https://tiles.openfreemap.org/styles/bright', // style URL
+			center: [138.6008, -34.9285], // starting position [lng, lat]
+			zoom: 5, // starting zoom
+			maplibreLogo: true
+		});
+		map.addControl(new maplibregl.NavigationControl());
+
+		// mount the Svelte component
+		const componentDom = document.createElement("div")
+		componentMount = mount(Component, {
+			target: componentDom,
+			props: {initial: 13}
+		})
+
 	});
 </script>
 
+<svelte:head>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.3.0/dist/maplibre-gl.css' />	
+</svelte:head>
+
 <style>
-	h1 {
-		color: #003607;
+	:global(*) {
+		padding: 0;
+		box-sizing: border-box;
+	}
+
+	:global(body) {
+		margin: 0;
+	}
+
+	:global(#marker) {
+		background: yellow;
+		border: 4px solid red;
+		width: 50px;
+		height: 50px;
+		border-radius: 50%;
+		cursor: pointer;
+	}
+
+	:global(.maplibregl-popup) {
+		min-width: 200px;
+		max-width: 300px;
+		color: black;
+	}
+
+	#map {
+		margin-top: 10px;
+		margin-bottom: 10px;
+		margin-left: auto;
+		margin-right: auto;
+		text-align: center;
+		height: 400px;
+		width: 80%;
 	}
 </style>
 
@@ -97,6 +154,7 @@
 			<p class="error">{error}</p>
 		{/if}
 	</div>
+	<div id="map" bind:this={mapContainer}></div>
 	<div class="container text-center">
 		<ul class="list-centered mb-4">
 			{#each location_map.entries() as [city, location_clicks] }
