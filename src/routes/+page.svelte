@@ -5,6 +5,7 @@
 
 	import maplibregl from 'maplibre-gl'
 	import Component from "./Component.svelte"
+	import { sequence } from "@sveltejs/kit/hooks";
 	
 	let mapContainer
 	let map: maplibregl.Map
@@ -16,6 +17,9 @@
 	let source: EventSource;
 	let error = $state<string | null>(null);
 	let locating = $state(false);
+
+	let counter = 0;
+	let working = false
 
 	interface LocationData {
 		city: string;
@@ -34,7 +38,9 @@
 			const data = JSON.parse(e.data);
 			location_map.set(data.city, { city: data.city, country: data.country, latitude: data.latitude, longitude: data.longitude, count: data.count });
 			//console.log('Received Location:', data.city, data.latitude, data.longitude, data.count);
-			
+			const popup = new maplibregl.Popup({closeOnClick: false});
+			popup.setLngLat([data.longitude, data.latitude]) .setHTML(`<div id="popup-content">${data.count} check-in${data.count != 1 ? 's' : ''} from ${data.city}, ${data.country}</div>`);
+			popup.addTo(map)
 		};
 	});
 
@@ -99,16 +105,7 @@
 						'source': 'satellite',
 					},
 				],
-				'sky': {
-					'atmosphere-blend': [
-						'interpolate',
-						['linear'],
-						['zoom'],
-						0, 1,
-						5, 1,
-						7, 0
-					]
-				},
+
 				'light': {
 					'anchor': 'map',
 					'position': [1.5, 90, 80]
@@ -120,8 +117,17 @@
 			maplibreLogo: false,
 		});
 
+		map.boxZoom.disable();
+		map.scrollZoom.disable();
+		map.dragPan.disable();
+		map.dragRotate.disable();
+		map.keyboard.disable();
+		map.doubleClickZoom.disable();
+		map.touchZoomRotate.disable();
+		map.touchPitch.disable();
+
 		map.addControl(new maplibregl.FullscreenControl());
-		map.addControl(new maplibregl.NavigationControl());
+		//map.addControl(new maplibregl.NavigationControl());
 
 		// mount the Svelte component
 		const componentDom = document.createElement("div")
@@ -130,42 +136,55 @@
 			props: {initial: 13}
 		})
 
-		setTimeout(() => onTick(), 1000);
 		
+		setTimeout(() => onTick(), 1000);
+		let ms = 20000
+		let clear
+		onTick();
+		if (!working) {
+			//clearInterval(clear)
+			clear = setInterval(onTick, ms)
+		}
 
 	});
 
 	function onTick() {
-		counter += 1
-		if (location_map.size === 0) return;
-		const keys = location_map.keys().toArray();
-		
-		const randomIndex = Math.floor(Math.random() * keys.length);   		
-    	const randomValue = location_map.get(keys[randomIndex]);
-		if (!randomValue) return;
-
-		console.log('Random Location:', randomValue);
-		map.flyTo({ 
-			center: [randomValue.longitude, randomValue.latitude], 
-			zoom: 12, 
-			speed: 0.5,
-			essential: true 
-		})
-
-		working = false;
-	}
-	
-	let ms = 20000
-	let counter = 0
-	
-	let clear
-	let working: boolean = false
-	onTick();
-	if (!working) {
+		if (working) {
+			console.log('Already working');
+			return;
+		}
 		working = true;
-		//clearInterval(clear)
-		clear = setInterval(onTick, ms)
+
+		counter += 1
+		if (location_map.size !== 0) {
+			const keys = location_map.keys().toArray();
+			if (keys.length !== 0) {
+				const index = counter % keys.length;   		
+				const randomValue = location_map.get(keys[index]);
+				if (!randomValue) {
+					working = false;
+					return;
+				}
+				console.log('Random Location:', randomValue);
+
+				map.flyTo({ 
+					center: [randomValue.longitude, randomValue.latitude], 
+					zoom: 10, 
+					speed: 0.3,
+					essential: true,
+				})
+	
+
+				working = false;
+			}
+		} else{
+			console.log('location_map.size === 0');
+			working = false;
+			return;
+		}	
 	}
+
+
 
 </script>
 
@@ -174,23 +193,6 @@
 </svelte:head>
 
 <style>
-	:global(*) {
-		padding: 0;
-		box-sizing: border-box;
-	}
-
-	:global(body) {
-		margin: 0;
-	}
-
-	:global(#marker) {
-		background: yellow;
-		border: 4px solid red;
-		width: 50px;
-		height: 50px;
-		border-radius: 50%;
-		cursor: pointer;
-	}
 
 	:global(.maplibregl-popup) {
 		min-width: 200px;
@@ -206,29 +208,26 @@
 		margin-right: auto;
 		text-align: center;
 		height: 400px;
-		width: 90%;
+		width: 70%;
 		background-color: black;
 	}
+
 </style>
 
-<nav id="top">
-<a href="/" class="logo">CaTa</a>
-<ul>
-	<li><a href="/" class="active">Home</a></li>
-</ul>
-</nav>
+
 <section>
 	<div class="container text-center">
 		<h1>Very Humble Beginnings for CaTa</h1>
 		<p class="text-muted">A clean start with a calm ocean, mist, and amber palette.</p>
 		<div class="flex gap-1" style="justify-content: center; margin-top: 1.5rem;">
-			<button type="button" class="btn btn-primary" onclick={() => handleClick(location)} disabled={clicking || locating}>Click?</button>
+			<button type="button" class="btn btn-primary" onclick={() => handleClick(location)} disabled={clicking || locating}>I want to check in!</button>
 		</div>
 		{#if error}
-			<p class="error">{error}</p>
+		<div class="error">{error}</div>
 		{/if}
 	</div>
 	<div id="map" bind:this={mapContainer}></div>
+	<!--
 	<div class="container text-center">
 		<ul class="list-centered mb-4">
 			{#each location_map.entries() as [city, location_clicks] }
@@ -236,6 +235,7 @@
 			{/each}
 			</ul>
 	</div>
+	-->
 </section>
 
 <hr>
@@ -292,7 +292,3 @@
 </section>
 
 <hr>
-
-<footer>
-<p>&copy; 2026 Cata.co | <a href="#top">Back to top</a></p>
-</footer>
