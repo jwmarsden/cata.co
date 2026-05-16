@@ -1,25 +1,7 @@
 <script lang="ts">
-	
-	import { onMount, mount, unmount, onDestroy } from 'svelte';
+	import { onMount } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
-
-	import maplibregl from 'maplibre-gl'
-	import Component from "./Component.svelte"
-	import { sequence } from "@sveltejs/kit/hooks";
-	
-	let mapContainer
-	let map: maplibregl.Map
-	let componentMount
-
-	let clicking = $state(false);
-	let location_map = new SvelteMap<string, { city: string; country: string; latitude: number; longitude: number; count: number }>();
-
-	let source: EventSource;
-	let error = $state<string | null>(null);
-	let locating = $state(false);
-
-	let counter = 0;
-	let working = false
+	import maplibregl from 'maplibre-gl';
 
 	interface LocationData {
 		city: string;
@@ -29,90 +11,114 @@
 		source: 'browser' | 'ip';
 	}
 
-	let location: LocationData | null = $state(null);
-	let loading = $state(true);
+	let mapContainer: HTMLElement;
+	let map: maplibregl.Map;
+
+	let clicking = $state(false);
+	let locating = $state(false);
+	let error = $state<string | null>(null);
+	let location = $state<LocationData | null>(null);
+
+	let location_map = new SvelteMap<string, {
+		city: string;
+		country: string;
+		latitude: number;
+		longitude: number;
+		count: number;
+	}>();
+
+	let source: EventSource;
+
+	// Fly sequence state
+	let counter = 0;
+	let activePopup: maplibregl.Popup | null = null;
+	let flyTimeout: ReturnType<typeof setTimeout> | null = null;
+	let isMidFly = false;
+
+	const PAUSE_AT_DESTINATION = 4000;
+	const FADE_IN_DELAY        = 400;
+	const FADE_IN_DURATION     = 1000;
+	const FADE_OUT_DURATION    = 600;
+
+	function onTick() {
+		if (flyTimeout) clearTimeout(flyTimeout);
+
+		if (location_map.size === 0) {
+			flyTimeout = setTimeout(onTick, 2000);
+			return;
+		}
+
+		const keys = [...location_map.keys()];
+		const index = counter % keys.length;
+		counter += 1;
+		const loc = location_map.get(keys[index]);
+		if (!loc) {
+			flyTimeout = setTimeout(onTick, 2000);
+			return;
+		}
+
+		// Fade out and remove previous popup
+		const prev = activePopup;
+		activePopup = null;
+		if (prev) {
+			const el = prev.getElement();
+			if (el) {
+				el.style.transition = `opacity ${FADE_OUT_DURATION}ms ease`;
+				el.style.opacity = '0';
+			}
+			setTimeout(() => prev.remove(), FADE_OUT_DURATION);
+		}
+
+		// Create new popup, start invisible
+		const popup = new maplibregl.Popup({ closeOnClick: false, closeButton: false })
+			.setLngLat([loc.longitude, loc.latitude])
+			.setHTML(`<div id="popup-content">${loc.count} check-in${loc.count !== 1 ? 's' : ''} from ${loc.city}, ${loc.country}</div>`);
+
+		popup.addTo(map);
+		const el = popup.getElement();
+		if (el) {
+			el.style.opacity = '0';
+			el.style.transition = 'none';
+		}
+		activePopup = popup;
+		isMidFly = true;
+
+		map.flyTo({
+			center: [loc.longitude, loc.latitude],
+			zoom: 10,
+			speed: 0.6,
+			essential: true,
+		});
+	}
 
 	onMount(() => {
 		source = new EventSource('/api');
 		source.onmessage = (e) => {
 			const data = JSON.parse(e.data);
-			location_map.set(data.city, { city: data.city, country: data.country, latitude: data.latitude, longitude: data.longitude, count: data.count });
-			//console.log('Received Location:', data.city, data.latitude, data.longitude, data.count);
-			const popup = new maplibregl.Popup({closeOnClick: false});
-			popup.setLngLat([data.longitude, data.latitude]) .setHTML(`<div id="popup-content">${data.count} check-in${data.count != 1 ? 's' : ''} from ${data.city}, ${data.country}</div>`);
-			popup.addTo(map)
-		};
-	});
-
-	onDestroy(() => {
-		source?.close();
-	});
-
-	async function handleClick(location: LocationData | null) {
-
-		clicking = true;
-		try {
-			const res = await fetch('/api', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' }
+			location_map.set(data.city, {
+				city: data.city,
+				country: data.country,
+				latitude: data.latitude,
+				longitude: data.longitude,
+				count: data.count
 			});
+		};
 
-		if (res.status === 429) {
-			error = 'Too many clicks — slow down!';
-			setTimeout(() => error = '', 5000);
-		}
-
-		if (!res.ok) {
-			error =  'Something went wrong.'
-			setTimeout(() => error = '', 5000);
-		}
-
-		const data = await res.json();
-
-		if (location_map.has(data.city)) {
-			location_map.set(data.city, { city: data.city, country: data.country, latitude: data.latitude, longitude: data.longitude, count: data.count });
-		} else {
-			location_map.set(data.city, { city: data.city, country: data.country, latitude: data.latitude, longitude: data.longitude, count: data.count });
-		}
-
-		} catch (e) {
-			error = e instanceof Error ? e.message : 'Network error';
-			setTimeout(() => error = '', 5000);
-		} finally {
-			// 1s cooldown before allowing another click
-			setTimeout(() => clicking = false, 1000);
-		}
-	}
-
-	onMount(() => {
 		map = new maplibregl.Map({
-			container: 'map', // container id
-			 style: {
-				'version': 8,
-				'projection': {
-					'type': 'globe'
+			container: 'map',
+			style: {
+				version: 8,
+				projection: { type: 'globe' },
+				sources: {
+					satellite: {
+						tiles: ['https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg'],
+						type: 'raster'
+					}
 				},
-				'sources': {
-					'satellite': {
-						'tiles': ['https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg'],
-						'type': 'raster'
-					},
-				},
-				'layers': [
-					{
-						'id': 'Satellite',
-						'type': 'raster',
-						'source': 'satellite',
-					},
-				],
-
-				'light': {
-					'anchor': 'map',
-					'position': [1.5, 90, 80]
-				}
+				layers: [{ id: 'Satellite', type: 'raster', source: 'satellite' }],
+				light: { anchor: 'map', position: [1.5, 90, 80] }
 			},
-			//center: [0,0], // starting position [lng, lat]
-			zoom: 2, // starting zoom
+			zoom: 2,
 			cooperativeGestures: true,
 			maplibreLogo: false,
 		});
@@ -127,93 +133,114 @@
 		map.touchPitch.disable();
 
 		map.addControl(new maplibregl.FullscreenControl());
-		//map.addControl(new maplibregl.NavigationControl());
 
-		// mount the Svelte component
-		const componentDom = document.createElement("div")
-		componentMount = mount(Component, {
-			target: componentDom,
-			props: {initial: 13}
-		})
+		map.on('moveend', () => {
+			if (!isMidFly) return;
+			isMidFly = false;
 
-		
-		setTimeout(() => onTick(), 1000);
-		let ms = 20000
-		let clear
-		onTick();
-		if (!working) {
-			//clearInterval(clear)
-			clear = setInterval(onTick, ms)
-		}
+			setTimeout(() => {
+				if (!activePopup) return;
+				const el = activePopup.getElement();
+				if (el) {
+					el.style.transition = `opacity ${FADE_IN_DURATION}ms ease`;
+					el.style.opacity = '1';
+				}
+				// Pause at destination, then fly to next
+				flyTimeout = setTimeout(onTick, PAUSE_AT_DESTINATION);
+			}, FADE_IN_DELAY);
+		});
 
+		map.on('load', () => {
+			flyTimeout = setTimeout(onTick, 1500);
+		});
+
+		return () => {
+			source?.close();
+			if (flyTimeout) clearTimeout(flyTimeout);
+			map?.remove();
+		};
 	});
 
-	function onTick() {
-		if (working) {
-			console.log('Already working');
-			return;
-		}
-		working = true;
+	async function handleClick(location: LocationData | null) {
+		clicking = true;
+		try {
+			const res = await fetch('/api', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' }
+			});
 
-		counter += 1
-		if (location_map.size !== 0) {
-			const keys = location_map.keys().toArray();
-			if (keys.length !== 0) {
-				const index = counter % keys.length;   		
-				const randomValue = location_map.get(keys[index]);
-				if (!randomValue) {
-					working = false;
-					return;
-				}
-				console.log('Random Location:', randomValue);
-
-				map.flyTo({ 
-					center: [randomValue.longitude, randomValue.latitude], 
-					zoom: 10, 
-					speed: 0.3,
-					essential: true,
-				})
-	
-
-				working = false;
+			if (res.status === 429) {
+				error = 'Too many clicks — slow down!';
+				setTimeout(() => error = '', 5000);
+				return;
 			}
-		} else{
-			console.log('location_map.size === 0');
-			working = false;
-			return;
-		}	
+
+			if (!res.ok) {
+				error = 'Something went wrong.';
+				setTimeout(() => error = '', 5000);
+				return;
+			}
+
+			const data = await res.json();
+			location_map.set(data.city, {
+				city: data.city,
+				country: data.country,
+				latitude: data.latitude,
+				longitude: data.longitude,
+				count: data.count
+			});
+
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'Network error';
+			setTimeout(() => error = '', 5000);
+		} finally {
+			setTimeout(() => clicking = false, 1000);
+		}
 	}
-
-
-
 </script>
 
 <svelte:head>
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.3.0/dist/maplibre-gl.css' />	
+	<link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5.3.0/dist/maplibre-gl.css' />
 </svelte:head>
 
 <style>
-
 	:global(.maplibregl-popup) {
 		min-width: 200px;
 		max-width: 300px;
 		color: black;
 	}
 
-	#map {
-		border: 1px solid #ccc;
-		margin-top: 10px;
-		margin-bottom: 10px;
-		margin-left: auto;
-		margin-right: auto;
-		text-align: center;
-		height: 400px;
-		width: 70%;
-		background-color: black;
-	}
-
+#map {
+	border: 1px solid #ccc;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	margin-left: auto;
+	margin-right: auto;
+	text-align: center;
+	height: 400px;
+	width: 70%;
+	background-color: #0a0a1a;
+	background-image:
+		radial-gradient(1px 1px at 10% 20%, white, transparent),
+		radial-gradient(1px 1px at 25% 75%, white, transparent),
+		radial-gradient(1px 1px at 40% 10%, white, transparent),
+		radial-gradient(1px 1px at 55% 55%, white, transparent),
+		radial-gradient(1px 1px at 70% 30%, white, transparent),
+		radial-gradient(1px 1px at 85% 80%, white, transparent),
+		radial-gradient(1.5px 1.5px at 15% 45%, white, transparent),
+		radial-gradient(1.5px 1.5px at 35% 90%, white, transparent),
+		radial-gradient(1.5px 1.5px at 60% 15%, white, transparent),
+		radial-gradient(1.5px 1.5px at 80% 60%, white, transparent),
+		radial-gradient(1px 1px at 5% 60%, rgba(255,255,255,0.6), transparent),
+		radial-gradient(1px 1px at 45% 35%, rgba(255,255,255,0.6), transparent),
+		radial-gradient(1px 1px at 65% 85%, rgba(255,255,255,0.6), transparent),
+		radial-gradient(1px 1px at 90% 15%, rgba(255,255,255,0.6), transparent),
+		radial-gradient(1px 1px at 20% 5%, rgba(255,255,255,0.4), transparent),
+		radial-gradient(1px 1px at 75% 50%, rgba(255,255,255,0.4), transparent),
+		radial-gradient(1px 1px at 50% 70%, rgba(255,255,255,0.4), transparent),
+		radial-gradient(1px 1px at 30% 25%, rgba(255,255,255,0.4), transparent);
+}
 </style>
-
 
 <section>
 	<div class="container text-center">
@@ -223,72 +250,59 @@
 			<button type="button" class="btn btn-primary" onclick={() => handleClick(location)} disabled={clicking || locating}>I want to check in!</button>
 		</div>
 		{#if error}
-		<div class="error">{error}</div>
+			<div class="error">{error}</div>
 		{/if}
 	</div>
 	<div id="map" bind:this={mapContainer}></div>
-	<!--
-	<div class="container text-center">
-		<ul class="list-centered mb-4">
-			{#each location_map.entries() as [city, location_clicks] }
-				<li>{city}, {location_clicks.country}: {location_clicks.count}</li>
-			{/each}
-			</ul>
-	</div>
-	-->
 </section>
 
 <hr>
 
 <section>
-<div class="container">
-	<h2 class="mb-4">Featured</h2>
-	<div class="flex flex-wrap gap-2">
-
-	<div class="card" style="flex: 1; min-width: 220px;">
-		<span class="badge badge-ocean mb-2">New</span>
-		<h3>Card title</h3>
-		<p class="text-muted">Some supporting text that describes what this card is about in a sentence or two.</p>
-		<a href="/">Read more →</a>
+	<div class="container">
+		<h2 class="mb-4">Featured</h2>
+		<div class="flex flex-wrap gap-2">
+			<div class="card" style="flex: 1; min-width: 220px;">
+				<span class="badge badge-ocean mb-2">New</span>
+				<h3>Card title</h3>
+				<p class="text-muted">Some supporting text that describes what this card is about in a sentence or two.</p>
+				<a href="/">Read more →</a>
+			</div>
+			<div class="card card-accent" style="flex: 1; min-width: 220px;">
+				<span class="badge badge-amber mb-2">Featured</span>
+				<h3>Accented card</h3>
+				<p class="text-muted">This one uses the amber left border to draw attention to important content.</p>
+				<a href="/">Read more →</a>
+			</div>
+			<div class="card" style="flex: 1; min-width: 220px;">
+				<span class="badge badge-mist mb-2">Draft</span>
+				<h3>Another card</h3>
+				<p class="text-muted">Cards sit on the misty blue surface, keeping them distinct from the warm off-white page.</p>
+				<a href="/">Read more →</a>
+			</div>
+		</div>
 	</div>
-
-	<div class="card card-accent" style="flex: 1; min-width: 220px;">
-		<span class="badge badge-amber mb-2">Featured</span>
-		<h3>Accented card</h3>
-		<p class="text-muted">This one uses the amber left border to draw attention to important content.</p>
-		<a href="/">Read more →</a>
-	</div>
-
-	<div class="card" style="flex: 1; min-width: 220px;">
-		<span class="badge badge-mist mb-2">Draft</span>
-		<h3>Another card</h3>
-		<p class="text-muted">Cards sit on the misty blue surface, keeping them distinct from the warm off-white page.</p>
-		<a href="/">Read more →</a>
-	</div>
-
-	</div>
-</div>
 </section>
 
 <hr>
 
 <section>
-<div class="container" style="max-width: 520px;">
-	<h2 class="mb-4">Get in touch</h2>
-	<div class="mb-2">
-	<label for="name">Your name</label>
-	<input type="text" id="name" placeholder="Jane Smith">
+	<div class="container" style="max-width: 520px;">
+		<h2 class="mb-4">Get in touch</h2>
+		<div class="mb-2">
+			<label for="name">Your name</label>
+			<input type="text" id="name" placeholder="Jane Smith">
+		</div>
+		<div class="mb-2">
+			<label for="email">Email address</label>
+			<input type="email" id="email" placeholder="jane@example.com">
+		</div>
+		<div class="mb-4">
+			<label for="message">Message</label>
+			<textarea id="message" rows="4" placeholder="Say hello…"></textarea>
+		</div>
+		<button class="btn btn-primary">Send message</button>
 	</div>
-	<div class="mb-2">
-	<label for="email">Email address</label>
-	<input type="email" id="email" placeholder="jane@example.com">
-	</div>
-	<div class="mb-4">
-	<label for="message">Message</label>
-	<textarea id="message" rows="4" placeholder="Say hello…"></textarea>
-	</div>
-	<button class="btn btn-primary">Send message</button>
-</div>
 </section>
 
 <hr>
