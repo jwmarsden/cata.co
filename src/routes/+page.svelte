@@ -1,4 +1,5 @@
 <script lang="ts">
+
 	import { onMount } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
 	import maplibregl from 'maplibre-gl';
@@ -8,7 +9,6 @@
 		latitude: number;
 		longitude: number;
 		country: string;
-		source: 'browser' | 'ip';
 	}
 
 	let mapContainer: HTMLElement;
@@ -29,7 +29,6 @@
 
 	let source: EventSource;
 
-	// Fly sequence state
 	let counter = 0;
 	let activePopup: maplibregl.Popup | null = null;
 	let flyTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -57,7 +56,6 @@
 			return;
 		}
 
-		// Fade out and remove previous popup
 		const prev = activePopup;
 		activePopup = null;
 		if (prev) {
@@ -197,6 +195,7 @@
 			setTimeout(() => clicking = false, 1000);
 		}
 	}
+
 </script>
 
 <svelte:head>
@@ -210,36 +209,36 @@
 		color: black;
 	}
 
-#map {
-	border: 1px solid #ccc;
-	margin-top: 10px;
-	margin-bottom: 10px;
-	margin-left: auto;
-	margin-right: auto;
-	text-align: center;
-	height: 400px;
-	width: 70%;
-	background-color: #0a0a1a;
-	background-image:
-		radial-gradient(1px 1px at 10% 20%, white, transparent),
-		radial-gradient(1px 1px at 25% 75%, white, transparent),
-		radial-gradient(1px 1px at 40% 10%, white, transparent),
-		radial-gradient(1px 1px at 55% 55%, white, transparent),
-		radial-gradient(1px 1px at 70% 30%, white, transparent),
-		radial-gradient(1px 1px at 85% 80%, white, transparent),
-		radial-gradient(1.5px 1.5px at 15% 45%, white, transparent),
-		radial-gradient(1.5px 1.5px at 35% 90%, white, transparent),
-		radial-gradient(1.5px 1.5px at 60% 15%, white, transparent),
-		radial-gradient(1.5px 1.5px at 80% 60%, white, transparent),
-		radial-gradient(1px 1px at 5% 60%, rgba(255,255,255,0.6), transparent),
-		radial-gradient(1px 1px at 45% 35%, rgba(255,255,255,0.6), transparent),
-		radial-gradient(1px 1px at 65% 85%, rgba(255,255,255,0.6), transparent),
-		radial-gradient(1px 1px at 90% 15%, rgba(255,255,255,0.6), transparent),
-		radial-gradient(1px 1px at 20% 5%, rgba(255,255,255,0.4), transparent),
-		radial-gradient(1px 1px at 75% 50%, rgba(255,255,255,0.4), transparent),
-		radial-gradient(1px 1px at 50% 70%, rgba(255,255,255,0.4), transparent),
-		radial-gradient(1px 1px at 30% 25%, rgba(255,255,255,0.4), transparent);
-}
+	#map {
+		border: 1px solid #ccc;
+		margin-top: 10px;
+		margin-bottom: 10px;
+		margin-left: auto;
+		margin-right: auto;
+		text-align: center;
+		height: 400px;
+		width: 70%;
+		background-color: #0a0a1a;
+		background-image:
+			radial-gradient(1px 1px at 10% 20%, white, transparent),
+			radial-gradient(1px 1px at 25% 75%, white, transparent),
+			radial-gradient(1px 1px at 40% 10%, white, transparent),
+			radial-gradient(1px 1px at 55% 55%, white, transparent),
+			radial-gradient(1px 1px at 70% 30%, white, transparent),
+			radial-gradient(1px 1px at 85% 80%, white, transparent),
+			radial-gradient(1.5px 1.5px at 15% 45%, white, transparent),
+			radial-gradient(1.5px 1.5px at 35% 90%, white, transparent),
+			radial-gradient(1.5px 1.5px at 60% 15%, white, transparent),
+			radial-gradient(1.5px 1.5px at 80% 60%, white, transparent),
+			radial-gradient(1px 1px at 5% 60%, rgba(255,255,255,0.6), transparent),
+			radial-gradient(1px 1px at 45% 35%, rgba(255,255,255,0.6), transparent),
+			radial-gradient(1px 1px at 65% 85%, rgba(255,255,255,0.6), transparent),
+			radial-gradient(1px 1px at 90% 15%, rgba(255,255,255,0.6), transparent),
+			radial-gradient(1px 1px at 20% 5%, rgba(255,255,255,0.4), transparent),
+			radial-gradient(1px 1px at 75% 50%, rgba(255,255,255,0.4), transparent),
+			radial-gradient(1px 1px at 50% 70%, rgba(255,255,255,0.4), transparent),
+			radial-gradient(1px 1px at 30% 25%, rgba(255,255,255,0.4), transparent);
+	}
 </style>
 
 <section>

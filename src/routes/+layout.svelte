@@ -16,6 +16,7 @@
 <a href="/" class="logo">CaTa</a>
 <ul>
 	<li><a href="/" class="active">Home</a></li>
+	<li><a href="/blog">Blog</a></li>
 	<li><a href="/about">About</a></li>
 </ul>
 </nav>
@@ -60,6 +61,7 @@
 		list-style: none;
 		display: flex;
 		gap: 1.5rem;
+		text-align: center;
 	}
 	nav ul a {
 		color: var(--color-mist-dark);

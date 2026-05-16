@@ -106,36 +106,7 @@ kbd {
 }
  
 section { padding: 4rem 0; }
- 
-/* --- Navigation --- */
-nav {
-  background-color: var(--color-ocean);
-  padding: 1rem 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-nav .logo {
-  color: #E8F4F8;
-  font-size: 1.2rem;
-  font-weight: 700;
-  text-decoration: none;
-}
-nav ul {
-  list-style: none;
-  display: flex;
-  gap: 1.5rem;
-}
-nav ul a {
-  color: var(--color-mist-dark);
-  text-decoration: none;
-  font-size: 0.9rem;
-  transition: color 0.2s;
-}
-nav ul a:hover,
-nav ul a.active {
-  color: var(--color-amber);
-}
+
  
 /* --- Buttons --- */
 .btn {
