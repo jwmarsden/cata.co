@@ -67,7 +67,6 @@
 			setTimeout(() => prev.remove(), FADE_OUT_DURATION);
 		}
 
-		// Create new popup, start invisible
 		const popup = new maplibregl.Popup({ closeOnClick: false, closeButton: false })
 			.setLngLat([loc.longitude, loc.latitude])
 			.setHTML(`<div id="popup-content">${loc.count} check-in${loc.count !== 1 ? 's' : ''} from ${loc.city}, ${loc.country}</div>`);

@@ -13,10 +13,10 @@
 </svelte:head>
 
 <nav id="top">
-<a href="/" class="logo">CaTa</a>
+<a href="https://cata.co" class="logo">CaTa</a>
 <ul>
 	<li><a href="/" class="active">Home</a></li>
-	<li><a href="/blog">Blog</a></li>
+	<li><a href="/posts">Posts</a></li>
 	<li><a href="/about">About</a></li>
 </ul>
 </nav>
