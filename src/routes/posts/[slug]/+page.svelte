@@ -19,5 +19,6 @@
 		<div class="prose">
 			{@html data.html}
 		</div>
+        
 	</div>
 </section>

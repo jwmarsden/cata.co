@@ -282,5 +282,17 @@ li { margin-bottom: 0.35rem; }
 .prose ul, .prose ol { margin-bottom: 1rem; padding-left: 1.5rem; }
 .prose li { margin-bottom: 0.25rem; }
 .prose a  { text-decoration: underline; }
-.prose code { background: #f0f0f0; padding: 0.1em 0.3em; border-radius: 3px; font-size: 0.9em; }
-.prose pre { background: #f0f0f0; padding: 1rem; border-radius: 6px; overflow-x: auto; margin-bottom: 1rem; }
+.prose pre {
+	background: none;
+	padding: 0;
+	border-radius: 6px;
+	overflow-x: auto;
+	margin-bottom: 1rem;
+	font-size: 0.9em;
+}
+.prose code {
+	background: none;
+	padding: 0;
+	border-radius: 0;
+	font-size: 1em;
+}
