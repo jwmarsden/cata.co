@@ -23,7 +23,7 @@
 				<span class="badge badge-amber mb-2">Featured</span>
 				<h3>Posting</h3>
 				<p class="text-muted">Finally, I have a post! Its simple, but good to have on the board.</p>
-				<a href="/posts/hello-world">Read more →</a>
+				<a href="/posts/202605/hello-world">Read more →</a>
 			</div>
 			<!--
 			<div class="card" style="flex: 1; min-width: 220px;">

@@ -51,7 +51,8 @@ marked.use({
 });
 
 export async function load({ params }) {
-	const filePath = path.resolve('src/posts', `${params.slug}.md`);
+	console.log('Loading post:', params.slug);
+	const filePath = path.resolve('src/posts', params.month, `${params.slug}.md`);
 
 	if (!fs.existsSync(filePath)) {
 		error(404, 'Post not found');
