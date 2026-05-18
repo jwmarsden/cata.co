@@ -32,7 +32,7 @@ I purchased [cata.co](https://cata.co) many years ago when there was an explosio
 
 ### Can this?
 
-#### Foot notes
+#### Foot-notes
 
 [^1]: This is a footnote content.
 
@@ -48,10 +48,12 @@ Here is a simple footnote[^1]. With some additional text after it[^@#$%] and wit
     ```
     a code block
     ```
-
-    | Header 1 | Header 2 |
-    | -------- | -------- |
-    | Cell 1   | Cell 2   |
+    
+    | Name       | Country   | Check-ins |
+    |------------|-----------|-----------|
+    | Adelaide   | Australia | 12        |
+    | London     | UK        | 8         |
+    | Tokyo      | Japan     | 5         |
 
     A `final` paragraph before list.
 
@@ -64,6 +66,8 @@ Here is a simple footnote[^1]. With some additional text after it[^@#$%] and wit
 
 #### Image
 
+![Windmill in Tylewice, Poland|200](/images/tylewice-wiatrak-windmill-abri-2013.jpg)
+![Windmill in Tylewice, Poland|1000x800](/images/tylewice-wiatrak-windmill-abri-2013.jpg)
 ![Windmill in Tylewice, Poland](/images/tylewice-wiatrak-windmill-abri-2013.jpg)
 
 #### Code block
@@ -100,3 +104,21 @@ FROM check_ins
 GROUP BY city
 ORDER BY checkins DESC;
 ```
+
+#### Math?
+
+##### Inline math
+
+The quadratic formula is $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$ which gives the roots.
+
+##### Block math
+
+$$
+\int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2}
+$$
+
+##### Another block
+
+$$
+E = mc^2
+$$

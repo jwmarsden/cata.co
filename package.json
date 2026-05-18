@@ -49,10 +49,12 @@
 	"dependencies": {
 		"gray-matter": "^4.0.3",
 		"highlight.js": "^11.11.1",
+		"katex": "^0.16.47",
 		"maplibre-gl": "^5.24.0",
 		"marked": "^18.0.3",
 		"marked-footnote": "^1.4.0",
 		"marked-highlight": "^2.2.4",
+		"marked-katex-extension": "^5.1.8",
 		"marked-shiki": "^1.2.1",
 		"shiki": "^4.0.2"
 	}

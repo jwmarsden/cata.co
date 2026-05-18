@@ -5,6 +5,7 @@
 <svelte:head>
 	<title>{data.title}</title>
 	<meta name="description" content={data.excerpt} />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" />
 </svelte:head>
 
 <section>
