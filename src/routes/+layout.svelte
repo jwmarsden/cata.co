@@ -1,8 +1,9 @@
 <script lang="ts">
 
 	import favicon from '$lib/assets/favicon.ico';
-
+	import { page } from '$app/state';
 	let { children } = $props();
+
 </script>
 
 <svelte:head>
@@ -13,12 +14,12 @@
 </svelte:head>
 
 <nav id="top">
-<a href="https://cata.co" class="logo">CaTa</a>
-<ul>
-	<li><a href="/" class="active">Home</a></li>
-	<li><a href="/posts">Posts</a></li>
-	<li><a href="/about">About</a></li>
-</ul>
+	<a href="https://cata.co" class="logo">CaTa</a>
+	<ul>
+		<li><a href="/" class:active={page.url.pathname === '/'}>Home</a></li>
+		<li><a href="/posts" class:active={page.url.pathname.startsWith('/posts')}>Posts</a></li>
+		<li><a href="/about" class:active={page.url.pathname === '/about'}>About</a></li>
+	</ul>
 </nav>
 
 <style>
