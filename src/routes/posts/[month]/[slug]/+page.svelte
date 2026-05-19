@@ -27,12 +27,26 @@
 <style>
 	/* .prose is scoped to this component */
 	/* but its children are raw HTML so we need :global() inside it */
-	.prose :global(table) {
-		width: 100%;
-		border-collapse: collapse;
-		margin-bottom: 1.5rem;
-		font-size: 0.95em;
-	}
+
+    .prose :global(h4) { 
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
+    }
+    .prose :global(h5) { 
+        margin-top: 0.25em;
+        margin-bottom: 0.25em;
+    }
+
+
+    .prose :global(img) {
+        background: none;
+        border-radius: 1em;
+        display: block; 
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
+        margin-left: auto; 
+        margin-right: auto;
+    }
 
     .prose :global(code) {
         background: none;
@@ -40,6 +54,13 @@
         border-radius: 0;
         font-size: 1em;
     }
+
+	.prose :global(table) {
+		width: 100%;
+		border-collapse: collapse;
+		margin-bottom: 1.5rem;
+		font-size: 0.95em;
+	}
 
     .prose :global(table) {
         width: 100%;

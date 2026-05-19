@@ -66,9 +66,9 @@ Here is a simple footnote[^1]. With some additional text after it[^@#$%] and wit
 
 #### Image
 
-![Windmill in Tylewice, Poland|200](/images/tylewice-wiatrak-windmill-abri-2013.jpg)
-![Windmill in Tylewice, Poland|1000x800](/images/tylewice-wiatrak-windmill-abri-2013.jpg)
-![Windmill in Tylewice, Poland](/images/tylewice-wiatrak-windmill-abri-2013.jpg)
+![Jellyfish, Singapore Oceanarium, Singapore|200](/images/jelly-fish.png)
+![Jellyfish, Singapore Oceanarium, Singapore|1000x800](/images/jelly-fish.png)
+![Jellyfish, Singapore Oceanariume, Singapore](/images/jelly-fish.png)
 
 #### Code block
 

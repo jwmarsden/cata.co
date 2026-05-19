@@ -4,11 +4,10 @@
 <section>
 	<div class="container text-center">
 		<h1>Very Humble Beginnings for CaTa</h1>
+		<p class="text-muted">A clean start with a calm ocean, mist, and amber palette.</p>
 	</div>
+	<hr>
 </section>
-
-<hr>
-
 <section>
 	<div class="container">
 		<h2 class="mb-4">Featured</h2>

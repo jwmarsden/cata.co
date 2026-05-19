@@ -1,7 +1,7 @@
 {
 	"name": "cata",
 	"private": true,
-	"version": "0.0.1",
+	"version": "0.0.3",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
@@ -20,7 +20,7 @@
 		"format": "prettier --write ."
 	},
 	"devDependencies": {
-		"@better-auth/cli": "~1.4.21",
+		"@better-auth/cli": "~1.4.22",
 		"@eslint/compat": "^2.0.4",
 		"@eslint/js": "^10.0.1",
 		"@sveltejs/adapter-auto": "^7.0.1",
@@ -30,7 +30,7 @@
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",
 		"@types/marked": "^5.0.2",
 		"@types/node": "^24",
-		"better-auth": "~1.4.21",
+		"better-auth": "~1.6.11",
 		"drizzle-kit": "^0.31.10",
 		"drizzle-orm": "^0.45.2",
 		"eslint": "^10.2.0",
