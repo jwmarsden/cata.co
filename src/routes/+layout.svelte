@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	let { children } = $props();
 
+	import Analytics from '$lib/components/Analytics.svelte';
 </script>
 
 <svelte:head>
@@ -12,6 +13,8 @@
 	<link rel="preconnect" href="https://fonts.gstatic.com">
 	<link href="https://fonts.googleapis.com/css2?family=ABeeZee:ital@0;1&display=swap" rel="stylesheet">
 </svelte:head>
+
+<Analytics />
 
 <nav id="top">
 	<a href="https://cata.co" class="logo">CaTa</a>

@@ -22,6 +22,12 @@
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
+
+  --color-text-layer1:#3a4e58; 
+  --color-text-layer2:#445b67; 
+  --color-text-layer3:#577584; 
+  --color-text-layer4:#638596; 
+  --color-text-layer5:#6c91a4;  
 }
  
 /* --- Reset --- */
