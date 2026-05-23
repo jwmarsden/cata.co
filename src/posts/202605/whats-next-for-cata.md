@@ -12,9 +12,9 @@ I think I will keep this infrastructure. I doubt I will use it a lot but who kno
 
 There are still a mountain of features that I would really like to be able to continue to grow here. In no particular order,
 
-1. Tags for posts.
+1. ~~Tags for posts.~~
 1. Tag indexing and landing pages. 
-1. Author for posts.
+1. ~~Author for posts.~~
 1. Author indexing and landing pages.  
 1. Image upload, storage and serve to be able to use on posts with just a simple internal reference.  
 1. Image pop-up on click. 
