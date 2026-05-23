@@ -2,7 +2,6 @@
   import { dev } from '$app/environment';
   export let measurementId = 'G-5Q8B1PCVHZ';
 </script>
-
 <!-- Load the Google Analytics Script -->
 <svelte:head>
 {#if !dev}

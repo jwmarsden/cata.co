@@ -1,5 +1,6 @@
 <script lang="ts">
 	let { data } = $props();
+    import { Calendar, User, Tag } from 'lucide-svelte';
 </script>
 
 <svelte:head>
@@ -12,11 +13,24 @@
 	<div class="container" style="max-width: 800px;">
 		<a href="/posts" class="text-muted" style="font-size: 0.9rem;">← Back to Posts</a>
 		<h1 class="mb-2" style="margin-top: 1rem;">{data.title}</h1>
-		{#if data.date}
-			<p class="text-muted" style="font-size: 0.85rem; margin-bottom: 2rem;">
-				{new Date(data.date).toLocaleDateString('en-AU', { year: 'numeric', month: 'long', day: 'numeric' })}
-			</p>
-		{/if}
+        <div class="post-meta">
+            <span class="meta-date">
+                <Calendar size={14} />
+                {data.date ? new Date(data.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'Unknown date'}
+            </span>
+            <span class="meta-divider">·</span>
+            <span class="meta-tags">
+                <Tag size={14} />
+                {#each data.tags as tag}
+                    <a href="/tag/{tag}" class="tag">{tag}</a>
+                {/each}
+            </span>
+            <span class="meta-divider">·</span>
+            <span class="meta-author">
+                <User size={14} />
+                <a href="/author/{data.author}" class="text-muted">{data.author}</a>
+            </span>
+        </div>
 		<div class="prose">
 			{@html data.html}
 		</div>
@@ -127,5 +141,42 @@
 
     .prose :global(tbody tr:hover) {
         background-color: var(--color-hover, #e6eef3);
+    }
+
+    .post-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: #888;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .meta-date,
+    .meta-author,
+    .meta-tags {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .meta-divider {
+        color: #ccc;
+    }
+
+    .tag {
+        background: var(--color-mist, #f0f4f7);
+        color: var(--color-ocean, #2a6b8a);
+        padding: 0.1rem 0.5rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        text-decoration: none;
+        transition: background 0.2s;
+    }
+
+    .tag:hover {
+        background: var(--color-ocean, #2a6b8a);
+        color: white;
     }
 </style>

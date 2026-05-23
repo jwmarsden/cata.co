@@ -17,7 +17,7 @@
 <Analytics />
 
 <nav id="top">
-	<a href="https://cata.co" class="logo">CaTa</a>
+	<a href="/" class="logo">CaTa</a>
 	<ul>
 		<li><a href="/" class:active={page.url.pathname === '/'}>Home</a></li>
 		<li><a href="/posts" class:active={page.url.pathname.startsWith('/posts')}>Posts</a></li>

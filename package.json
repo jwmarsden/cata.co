@@ -50,6 +50,7 @@
 		"gray-matter": "^4.0.3",
 		"highlight.js": "^11.11.1",
 		"katex": "^0.16.47",
+		"lucide-svelte": "^1.0.1",
 		"maplibre-gl": "^5.24.0",
 		"marked": "^18.0.3",
 		"marked-footnote": "^1.4.0",

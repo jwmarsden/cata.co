@@ -66,6 +66,8 @@ export async function load({ params }) {
 		title: data.title ?? 'Untitled',
 		date: data.date ? new Date(data.date).toISOString() : null,
 		excerpt: data.excerpt ?? '',
+		tags: data.tags ?? [],
+		author: data.author ?? 'Unknown',
 		html,
 	};
 }
