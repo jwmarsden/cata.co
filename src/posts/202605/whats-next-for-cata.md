@@ -19,7 +19,7 @@ There are still a mountain of features that I would really like to be able to co
 1. Image upload, storage and serve to be able to use on posts with just a simple internal reference.  
 1. Image pop-up on click. 
 1. Global to-do list.
-1. Some kind of commenting service to allow feedback. 
+1. ~~Some kind of commenting service to allow feedback.~~ 
 
 ## Content Idea Brain Dump
 

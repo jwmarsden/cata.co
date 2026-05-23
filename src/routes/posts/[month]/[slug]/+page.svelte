@@ -1,6 +1,7 @@
 <script lang="ts">
 	let { data } = $props();
     import { Calendar, User, Tag } from 'lucide-svelte';
+    import Giscus from '$lib/components/Giscus.svelte';
 </script>
 
 <svelte:head>
@@ -34,7 +35,7 @@
 		<div class="prose">
 			{@html data.html}
 		</div>
-        
+        <Giscus />
 	</div>
 </section>
 
