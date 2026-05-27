@@ -1,12 +1,8 @@
-import type { Handle } from '@sveltejs/kit';
-import { building } from '$app/environment';
-import { auth } from '$lib/server/auth';
-import { svelteKitHandler } from 'better-auth/svelte-kit';
-import type { ServerInit } from '@sveltejs/kit';
 import { index_posts } from '$lib/server/posts/post_index';
-import { getSession } from '$lib/server/session';
-
-const SESSION_COOKIE = 'sid';
+import { handle as authHandle } from './auth';
+import { redirect } from '@sveltejs/kit';
+import type { Handle, ServerInit } from '@sveltejs/kit';
+import { sequence } from '@sveltejs/kit/hooks';
 
 export const init: ServerInit = async () => {
 	index_posts().then(() => {
@@ -17,21 +13,23 @@ export const init: ServerInit = async () => {
 
 };
 
+const adminGuard: Handle = async ({ event, resolve }) => {
+	//console.log('PATH:', event.url.pathname);
 
-export const handle: Handle = async ({ event, resolve }) => {
-	const session = await auth.api.getSession({ headers: event.request.headers });
-	if (session) {
-		event.locals.session = session.session;
-		event.locals.user = session.user;
+	if (event.url.pathname.startsWith('/admin')) {
+		if (event.url.pathname.startsWith('/admin/login')) {
+			//console.log('ALLOWING login page through');
+			return resolve(event);
+		}
+		const session = await event.locals.auth();
+		//console.log('SESSION:', session);
+		if (!session?.user) {
+			//console.log('NO SESSION, redirecting to login');
+			redirect(303, '/admin/login');
+		}
 	}
 
-	const sessionId = event.cookies.get(SESSION_COOKIE);
-
-	if (sessionId) {
-		const sessionData = await getSession(sessionId);
-		event.locals.sessionData = sessionData;
-		event.locals.sessionId = sessionId;
-	}
-
-	return svelteKitHandler({ event, resolve, auth, building });
+	return resolve(event);
 };
+
+export const handle = sequence(authHandle, adminGuard);
