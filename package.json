@@ -49,6 +49,7 @@
 	"dependencies": {
 		"gray-matter": "^4.0.3",
 		"highlight.js": "^11.11.1",
+		"ioredis": "^5.11.0",
 		"katex": "^0.16.47",
 		"lucide-svelte": "^1.0.1",
 		"maplibre-gl": "^5.24.0",

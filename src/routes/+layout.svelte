@@ -78,7 +78,9 @@
 		color: var(--color-amber);
 	}
 </style>
-{@render children()}
+<main>
+    {@render children()}
+</main>
 <footer>
 <p>&copy; 2026 Cata.co | <a href="#top">Back to top</a></p>
 </footer>

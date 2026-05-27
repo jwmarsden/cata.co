@@ -1,25 +1,16 @@
-const rateLimits = new Map<string, { count: number; resetAt: number }>();
-const LIMIT = 2;
-const WINDOW_MS = 10_000;
+import redis from './redis';
 
-// Clean up old entries periodically to prevent memory leaks
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, entry] of rateLimits) {
-    if (now > entry.resetAt) rateLimits.delete(key);
-  }
-}, 60_000);
+const LIMIT = 5;
+const WINDOW_MS = 10; // seconds
 
-export function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const entry = rateLimits.get(ip);
+export async function isRateLimited(ip: string): Promise<boolean> {
+  const key = `ratelimit:${ip}`;
 
-  if (!entry || now > entry.resetAt) {
-    rateLimits.set(ip, { count: 1, resetAt: now + WINDOW_MS });
-    return false;
+  const count = await redis.incr(key);
+  if (count === 1) {
+    // First hit — set expiry
+    await redis.expire(key, WINDOW_MS);
   }
 
-  if (entry.count >= LIMIT) return true;
-  entry.count++;
-  return false;
+  return count > LIMIT;
 }

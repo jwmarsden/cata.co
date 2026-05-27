@@ -3,6 +3,7 @@ import { db } from '$lib/server/db';
 import { location_counter } from '$lib/server/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { isRateLimited } from '$lib/server/rateLimit';
+import { createSession, updateSession } from '$lib/server/session';
 
 // SSE client registry
 const clients = new Map<string, Set<ReadableStreamDefaultController>>();
@@ -118,7 +119,7 @@ export const GET: RequestHandler = async ({ url }) => {
 };
 
 // POST — receive click with coords, reverse geocode, upsert counter
-export const POST: RequestHandler = async ({ request, getClientAddress }) => {
+export const POST: RequestHandler = async ({ request, getClientAddress, cookies }) => {
   console.log('Received POST request to /api'); 
 
   const forwarded = request.headers.get('x-forwarded-for');
@@ -128,8 +129,8 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
     console.log('Localhost request received');
     ip = '8.8.8.8'
   }
-  if (isRateLimited(ip)) {
-    return new Response('Too many requests. And Max sucks.', { status: 429 });
+  if (await isRateLimited(ip)) {
+    return new Response('Too many requests', { status: 429 });
   }
 
   const ip_details = await getIPLocation(ip);
@@ -155,6 +156,20 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
     }
   } catch {
     return new Response('Invalid coordinates', { status: 400 });
+  }
+
+  let sessionId = cookies.get('sid');
+  if (!sessionId) {
+    sessionId = await createSession({ city });
+    cookies.set('sid', sessionId, {
+      path: '/',
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 24 * 7
+    });
+  } else {
+    await updateSession(sessionId, { city });
   }
 
   //console.log(`Received click from IP ${ip}: ${city} (${latitude}, ${longitude})`);
