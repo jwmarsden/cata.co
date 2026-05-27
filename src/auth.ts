@@ -1,5 +1,7 @@
 import { SvelteKitAuth } from '@auth/sveltekit';
 import GitHub from '@auth/sveltekit/providers/github';
+import redis from '$lib/server/mem/redis';
+import { RedisAdapter } from '$lib/server/mem/redis-adapter';
 import {
 	GITHUB_ID,
 	GITHUB_SECRET,
@@ -8,6 +10,7 @@ import {
 } from '$env/static/private';
 
 export const { handle, signIn, signOut } = SvelteKitAuth({
+	adapter: RedisAdapter(redis),
 	providers: [
 		GitHub({
 			clientId: GITHUB_ID,
@@ -17,22 +20,16 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
 	secret: AUTH_SECRET,
 	trustHost: true,
 	session: {
-		strategy: 'jwt',
+		strategy: 'database',
+		maxAge: 30 * 24 * 60 * 60, // 30 days
 	},
 	callbacks: {
 		async signIn({ profile }: { profile?: any }) {
 			return profile?.login === ADMIN_GITHUB_USERNAME;
 		},
-		async jwt({ token, profile }: { token: any; profile?: any }) {
-			if (profile) {
-				token.login = profile.login;
-				token.name = profile.name ?? profile.login; // fallback to username if no display name
-			}
-			return token;
-		},
-		async session({ session, token }: { session: any; token: any }) {
-			session.user.login = token.login;
-			session.user.name = token.name;
+		async session({ session, user }: { session: any; user: any }) {
+			session.user.login = user.login;
+			session.user.name = user.name ?? user.login;
 			return session;
 		},
 	},

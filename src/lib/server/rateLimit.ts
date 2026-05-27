@@ -1,4 +1,4 @@
-import redis from './redis';
+import redis from './mem/redis';
 
 const LIMIT = 5;
 const WINDOW_MS = 10; // seconds

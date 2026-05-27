@@ -1,4 +1,4 @@
-import redis from './redis';
+import redis from './mem/redis';
 import { randomUUID } from 'crypto';
 
 const SESSION_TTL = 60 * 60 * 24 * 7; // 7 days in seconds

@@ -1,4 +1,4 @@
-import redis from './redis';
+import redis from './mem/redis';
 
 const DEFAULT_TTL = 60; // seconds
 
