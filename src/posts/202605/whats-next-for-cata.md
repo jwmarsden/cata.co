@@ -16,6 +16,7 @@ There are still a mountain of features that I would really like to be able to co
 1. Tag indexing and landing pages. 
 1. ~~Author for posts.~~
 1. Author indexing and landing pages.  
+1. ~~Secure [Admin](/admin) area to build around.~~
 1. Image upload, storage and serve to be able to use on posts with just a simple internal reference.  
 1. Image pop-up on click. 
 1. Global to-do list.
