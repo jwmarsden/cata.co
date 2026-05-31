@@ -7,7 +7,7 @@
 	import favicon from '$lib/assets/favicon.ico';
 	import { page } from '$app/state';
 	import { House, BookOpen, Info } from 'lucide-svelte';
-
+	import Analytics from '$lib/components/Analytics.svelte';
 	let { children } = $props();
 </script>
 
@@ -47,5 +47,7 @@
 <footer>
 	<p>&copy; 2026 Cata.co | <a href="#top">Back to top</a></p>
 </footer>
+
+<Analytics />
 </div>
 
