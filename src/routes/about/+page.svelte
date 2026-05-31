@@ -1,23 +1,13 @@
 <script lang="ts">
-
 	import { onMount } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
 	import maplibregl from 'maplibre-gl';
-
-	interface LocationData {
-		city: string;
-		latitude: number;
-		longitude: number;
-		country: string;
-	}
 
 	let mapContainer: HTMLElement;
 	let map: maplibregl.Map;
 
 	let clicking = $state(false);
-	let locating = $state(false);
 	let error = $state<string | null>(null);
-	let location = $state<LocationData | null>(null);
 
 	let location_map = new SvelteMap<string, {
 		city: string;
@@ -28,7 +18,6 @@
 	}>();
 
 	let source: EventSource;
-
 	let counter = 0;
 	let activePopup: maplibregl.Popup | null = null;
 	let flyTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -102,7 +91,7 @@
 		};
 
 		map = new maplibregl.Map({
-			container: 'map',
+			container: mapContainer,
 			style: {
 				version: 8,
 				projection: { type: 'globe' },
@@ -142,7 +131,6 @@
 					el.style.transition = `opacity ${FADE_IN_DURATION}ms ease`;
 					el.style.opacity = '1';
 				}
-				// Pause at destination, then fly to next
 				flyTimeout = setTimeout(onTick, PAUSE_AT_DESTINATION);
 			}, FADE_IN_DELAY);
 		});
@@ -158,7 +146,7 @@
 		};
 	});
 
-	async function handleClick(location: LocationData | null) {
+	async function handleClick() {
 		clicking = true;
 		try {
 			const res = await fetch('/api', {
@@ -194,7 +182,6 @@
 			setTimeout(() => clicking = false, 1000);
 		}
 	}
-
 </script>
 
 <svelte:head>
@@ -208,15 +195,12 @@
 		color: black;
 	}
 
-	#map {
-		border: 1px solid #ccc;
-		margin-top: 10px;
-		margin-bottom: 10px;
-		margin-left: auto;
-		margin-right: auto;
-		text-align: center;
+	.map-container {
 		height: 400px;
 		width: 70%;
+		margin: 1rem auto;
+		border: 1px solid #ccc;
+		border-radius: 8px;
 		background-color: #0a0a1a;
 		background-image:
 			radial-gradient(1px 1px at 10% 20%, white, transparent),
@@ -240,18 +224,25 @@
 	}
 </style>
 
-<section>
-	<div class="container text-center">
-		<h1>Very Humble Beginnings for CaTa</h1>
-		<p class="text-muted">A clean start with a calm ocean, mist, and amber palette.</p>
-		<div class="flex gap-1" style="justify-content: center; margin-top: 1.5rem;">
-			<button type="button" class="btn btn-primary" onclick={() => handleClick(location)} disabled={clicking || locating}>I want to check in!</button>
-		</div>
+<section class="py-16">
+	<div class="max-w-5xl mx-auto px-6 text-center">
+		<h1 class="text-4xl font-bold text-ocean mb-3">Very Humble Beginnings for CaTa</h1>
+		<p class="text-text-muted mb-6">A clean start with a calm ocean, mist, and amber palette.</p>
+		<button
+			type="button"
+			class="btn bg-amber text-ocean border-none hover:bg-amber/80 font-semibold"
+			onclick={handleClick}
+			disabled={clicking}
+		>
+			I want to check in!
+		</button>
 		{#if error}
-			<div class="error">{error}</div>
+			<div class="alert alert-error mt-4 max-w-sm mx-auto text-sm">
+				<span>{error}</span>
+			</div>
 		{/if}
 	</div>
-	<div id="map" bind:this={mapContainer}></div>
+	<div class="map-container" bind:this={mapContainer}></div>
 </section>
 
-<hr>
+<div class="divider mx-6"></div>

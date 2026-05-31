@@ -1,59 +1,44 @@
 <script lang="ts">
 </script>
 
-<section>
-	<div class="container text-center">
-		<h1>Very Humble Beginnings for CaTa</h1>
-		<p class="text-muted">A clean start with a calm ocean, mist, and amber palette.</p>
+<section class="py-16">
+	<div class="max-w-5xl mx-auto px-6 text-center">
+		<h1 class="text-4xl font-bold text-ocean mb-3">Very Humble Beginnings for CaTa</h1>
+		<p class="text-text-muted">A clean start with a calm ocean, mist, and amber palette.</p>
 	</div>
-	<hr>
 </section>
-<section>
-	<div class="container">
-		<h2 class="mb-4">Featured</h2>
-		<div class="flex flex-wrap gap-2">
-			<div class="card" style="flex: 1; min-width: 220px;">
-				<span class="badge badge-ocean mb-2">New</span>
-				<h3>Check in!</h3>
-				<p class="text-muted">Check in with CaTa!</p>
-				<a href="/about">Read more →</a>
+
+<hr class="h-px w-188 mx-auto my-8 bg-mist-dark border-0 ">
+
+<section class="py-16">
+	<div class="max-w-5xl mx-auto px-6">
+		<h2 class="text-2xl font-bold text-ocean mb-8">Featured</h2>
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+			<div class="card bg-mist border border-mist-dark">
+				<div class="card-body">
+					<div class="badge bg-ocean text-mist border-none mb-2">New</div>
+					<h3 class="card-title text-ocean">Check in!</h3>
+					<p class="text-text-muted">Check in with CaTa!</p>
+					<div class="card-actions mt-2">
+						<a href="/about">Read more →</a>
+					</div>
+				</div>
 			</div>
-			<div class="card card-accent" style="flex: 1; min-width: 220px;">
-				<span class="badge badge-amber mb-2">Featured</span>
-				<h3>Posting</h3>
-				<p class="text-muted">Finally, I have a post! Its simple, but good to have on the board.</p>
-				<a href="/posts/202605/hello-world">Read more →</a>
+
+			<div class="card bg-mist border border-mist-dark border-l-4 border-l-amber">
+				<div class="card-body">
+					<div class="badge bg-amber text-ocean border-none mb-2">Featured</div>
+					<h3 class="card-title text-ocean">Posting</h3>
+					<p class="text-text-muted">Finally, I have a post! Its simple, but good to have on the board.</p>
+					<div class="card-actions mt-2">
+						<a href="/posts/202605/hello-world">Read more →</a>
+					</div>
+				</div>
 			</div>
-			<!--
-			<div class="card" style="flex: 1; min-width: 220px;">
-				<span class="badge badge-mist mb-2">Draft</span>
-				<h3>Another card</h3>
-				<p class="text-muted">Cards sit on the misty blue surface, keeping them distinct from the warm off-white page.</p>
-				<a href="/">Read more →</a>
-			</div>
-			-->
+
 		</div>
 	</div>
 </section>
 
-<hr>
-<!--
-<section>
-	<div class="container" style="max-width: 520px;">
-		<h2 class="mb-4">Get in touch</h2>
-		<div class="mb-2">
-			<label for="name">Your name</label>
-			<input type="text" id="name" placeholder="Jane Smith">
-		</div>
-		<div class="mb-2">
-			<label for="email">Email address</label>
-			<input type="email" id="email" placeholder="jane@example.com">
-		</div>
-		<div class="mb-4">
-			<label for="message">Message</label>
-			<textarea id="message" rows="4" placeholder="Say hello…"></textarea>
-		</div>
-		<button class="btn btn-primary">Send message</button>
-	</div>
-</section>
--->
+<hr class="h-px w-188 mx-auto my-8 bg-mist-dark border-0">

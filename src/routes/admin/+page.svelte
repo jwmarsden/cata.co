@@ -320,7 +320,7 @@
 								{/if}
 								<div class="media-actions">
 									<button class="btn-action" onclick={() => copyMarkdown(file)}>
-										{copiedId === file.id ? '✓' : '⎘'} {copiedId === file.id ? 'Copied' : 'Copy'}
+										{copiedId === file.id ? '✓' : '⎘'} {copiedId === file.id ? 'Done' : 'Copy'}
 									</button>
 									<button class="btn-action" onclick={() => openEdit(file)}>✎ Edit</button>
 									<button class="btn-action danger" onclick={() => deleteFile(file)}>✕</button>
