@@ -2,7 +2,7 @@ import { sequence } from '@sveltejs/kit/hooks';
 import { handle as authHandle } from './auth';
 import { redirect } from '@sveltejs/kit';
 import type { Handle, ServerInit } from '@sveltejs/kit';
-import { index_posts } from '$lib/server/posts/post_index';
+import { index_posts } from '$lib/server/posts/post-index';
 
 export const init: ServerInit = async () => {
 	index_posts().then(() => {
@@ -25,4 +25,4 @@ const adminGuard: Handle = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
-export const handle = sequence(authHandle, adminGuard);
+export const handle = sequence(authHandle, adminGuard); 

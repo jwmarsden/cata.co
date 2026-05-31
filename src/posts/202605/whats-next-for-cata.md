@@ -2,7 +2,7 @@
 title: "Whats next for CaTa?"
 date: 2026-05-23
 excerpt: "'In preparing for battle I have always found that plans are useless, but planning is indispensable.' -  Dwight D. Eisenhower." 
-tags: ["cata", "planning"]
+tags: ["cata", "planning","todo","css"]
 author: "jwm"
 ---
 
@@ -13,7 +13,8 @@ I think I will keep this infrastructure. I doubt I will use it a lot but who kno
 There are still a mountain of features that I would really like to be able to continue to grow here. In no particular order,
 
 1. ~~Tags for posts.~~
-1. Tag indexing and landing pages. 
+1. ~~Add a decent CSS structure.~~
+1. ~~Tag indexing and landing pages.~~
 1. ~~Author for posts.~~
 1. Author indexing and landing pages.  
 1. ~~Secure [Admin](/admin) area to build around.~~

@@ -1,4 +1,11 @@
 <script lang="ts">
+	import TagCloud from '$lib/components/TagCloud.svelte';
+
+	interface PageData {
+		tags: { name: string; occurrences: number; instances: { type: string; url: string; description: string }[] }[];
+	}
+
+	let { data } = $props<{ data: PageData }>();
 </script>
 
 <section class="py-16">
@@ -13,7 +20,19 @@
 <section class="py-16">
 	<div class="max-w-5xl mx-auto px-6">
 		<h2 class="text-2xl font-bold text-ocean mb-8">Featured</h2>
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+			<div class="card bg-mist border border-mist-dark">
+				<div class="card-body">
+					<div class="badge bg-ocean text-mist border-none mb-2">New</div>
+					<h3 class="card-title text-ocean mb-4">Fast Tags!</h3>
+					{#if data.tags.length === 0}
+						<p class="text-text-muted text-sm">No tags yet.</p>
+					{:else}
+						<TagCloud tags={data.tags} />
+					{/if}
+				</div>
+			</div>
 
 			<div class="card bg-mist border border-mist-dark">
 				<div class="card-body">
@@ -36,6 +55,8 @@
 					</div>
 				</div>
 			</div>
+
+
 
 		</div>
 	</div>

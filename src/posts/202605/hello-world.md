@@ -2,7 +2,7 @@
 title: "Hello World"
 date: 2026-05-08
 excerpt: "This is a first post to both announce the ability to write something, and to build the infrastructure around it, and to also style it."
-tags: ["cata", "getting-started"]
+tags: ["cata", "getting-started", "hello-world", "markdown"]
 author: "jwm"
 ---
 
