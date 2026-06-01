@@ -6,6 +6,7 @@ import { json, redirect, error } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { media } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
+import { syncMediaTagsToRedis } from '$lib/server/tags/tag-sync';
 
 export async function GET({ params, locals, url }) {
 	const session = await locals.auth();
@@ -37,8 +38,11 @@ export async function PATCH({ params, request, locals }) {
 			friendlyName: body.friendlyName,
 			altText: body.altText,
 			description: body.description,
+			tags: JSON.stringify(body.tags ?? []),
 		})
 		.where(eq(media.id, params.id));
+	
+	await syncMediaTagsToRedis();
 
 	return json({ ok: true });
 }

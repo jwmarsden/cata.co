@@ -8,6 +8,7 @@ export const media = pgTable('media', {
 	friendlyName: text('friendly_name').notNull(),
 	altText: text('alt_text').notNull().default(''),
 	description: text('description').notNull().default(''),
+	tags: text('tags').notNull().default('[]'), // stored as JSON array string
 	contentType: text('content_type').notNull(),
 	size: integer('size').notNull(),
 	uploadedAt: timestamp('uploaded_at').notNull().defaultNow(),

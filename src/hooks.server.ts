@@ -3,6 +3,7 @@ import { handle as authHandle } from './auth';
 import { redirect } from '@sveltejs/kit';
 import type { Handle, ServerInit } from '@sveltejs/kit';
 import { index_posts } from '$lib/server/posts/post-index';
+import { syncMediaTagsToRedis } from '$lib/server/tags/tag-sync';
 
 export const init: ServerInit = async () => {
 	index_posts().then(() => {
@@ -10,7 +11,23 @@ export const init: ServerInit = async () => {
 	}).catch(err => {
 		console.error('Error indexing posts:', err);
 	});
+
+	syncMediaTagsToRedis().catch(err => {
+		console.error('Error syncing media tags:', err);
+	});
 };
+
+const securityHeaders: Handle = async ({ event, resolve }) => {
+	const response = await resolve(event);
+
+	if (event.url.pathname.startsWith('/admin/media')) {
+		response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+		response.headers.set('Cross-Origin-Embedder-Policy', 'credentialless');
+	}
+
+	return response;
+};
+
 
 const adminGuard: Handle = async ({ event, resolve }) => {
 	if (event.url.pathname.startsWith('/admin')) {
@@ -25,4 +42,4 @@ const adminGuard: Handle = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
-export const handle = sequence(authHandle, adminGuard);
+export const handle = sequence(authHandle, adminGuard, securityHeaders);

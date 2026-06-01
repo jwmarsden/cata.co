@@ -4,7 +4,8 @@ import { BUCKET_NAME } from '$env/static/private';
 import { json, error } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { media } from '$lib/server/db/schema';
-import { generateImageThumbnail, generateVideoThumbnail } from '$lib/server/bucket/thumbnail';
+import { generateImageThumbnail } from '$lib/server/bucket/thumbnail';
+import { syncMediaTagsToRedis } from '$lib/server/tags/tag-sync';
 
 export async function POST({ request, locals }) {
 	const session = await locals.auth();
@@ -12,6 +13,7 @@ export async function POST({ request, locals }) {
 
 	const formData = await request.formData();
 	const file = formData.get('file') as File;
+	const thumbnail = formData.get('thumbnail') as File | null;
 	const friendlyName = (formData.get('friendlyName') as string)?.trim();
 	const altText = (formData.get('altText') as string)?.trim() ?? '';
 	const description = (formData.get('description') as string)?.trim() ?? '';
@@ -24,7 +26,7 @@ export async function POST({ request, locals }) {
 	const key = `media/${id}.${ext}`;
 	const buffer = Buffer.from(await file.arrayBuffer());
 
-	// Upload original
+	// Upload original file
 	await s3.send(new PutObjectCommand({
 		Bucket: BUCKET_NAME,
 		Key: key,
@@ -32,18 +34,29 @@ export async function POST({ request, locals }) {
 		ContentType: file.type,
 	}));
 
-	// Generate thumbnail
+	// Generate or use pre-supplied thumbnail
 	let thumbnailKey: string | null = null;
 	try {
-		if (file.type.startsWith('image/')) {
+		if (thumbnail) {
+			// Use client-side generated thumbnail (video)
+			const thumbBuffer = Buffer.from(await thumbnail.arrayBuffer());
+			thumbnailKey = `thumbnails/${id}.jpg`;
+			await s3.send(new PutObjectCommand({
+				Bucket: BUCKET_NAME,
+				Key: thumbnailKey,
+				Body: thumbBuffer,
+				ContentType: 'image/jpeg',
+			}));
+		} else if (file.type.startsWith('image/')) {
+			// Generate server-side thumbnail for images
 			thumbnailKey = await generateImageThumbnail(buffer, id);
-		} else if (file.type.startsWith('video/')) {
-			thumbnailKey = await generateVideoThumbnail(buffer, id);
 		}
 	} catch (err) {
-		// Log but don't fail the upload if thumbnail generation fails
-		console.error('Thumbnail generation failed:', err);
+		console.error('Thumbnail failed:', err);
 	}
+
+	const tagsRaw = formData.get('tags') as string;
+	const tags = tagsRaw ? JSON.parse(tagsRaw) : [];
 
 	await db.insert(media).values({
 		id,
@@ -53,9 +66,12 @@ export async function POST({ request, locals }) {
 		friendlyName,
 		altText,
 		description,
+		tags: JSON.stringify(tags),
 		contentType: file.type,
 		size: file.size,
 	});
+
+	await syncMediaTagsToRedis();
 
 	return json({ id, key });
 }

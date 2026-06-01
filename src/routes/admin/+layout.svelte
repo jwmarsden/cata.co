@@ -1,22 +1,24 @@
 <script lang="ts">
-	import { signOut } from '@auth/sveltekit/client';
 	let { children, data } = $props();
 </script>
 
-<nav id="top" style="background: var(--color-ocean); padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between;">
-	<span style="color: var(--color-amber); font-size: 1.2rem; font-weight: 700;">CaTa Admin</span>
-	<div style="display: flex; gap: 1.5rem; align-items: center;">
-		<a href="/admin" style="color: var(--color-mist-dark); font-size: 0.9rem;">Dashboard</a>
-		<a href="/admin/media" style="color: var(--color-mist-dark); font-size: 0.9rem;">Media</a>
-		<a href="/admin/posts" style="color: var(--color-mist-dark); font-size: 0.9rem;">Posts</a>
-		<button
-			onclick={() => signOut({ callbackUrl: '/' })}
-			style="font-size: 0.85rem; color: var(--color-mist-dark); background: none; border: none; cursor: pointer;">
-			Sign out
-		</button>
-	</div>
-</nav>
+<div data-theme="cata" class="min-h-screen flex flex-col">
+	<nav class="bg-ocean px-6 py-4 flex items-center justify-between">
+		<span class="text-amber text-xl font-bold">CaTa Admin</span>
+		<div class="flex items-center gap-6">
+			<a href="/admin" class="text-mist-dark text-sm no-underline hover:text-amber">Dashboard</a>
+			<a href="/admin/media" class="text-mist-dark text-sm no-underline hover:text-amber">Media</a>
+			<a href="/admin/posts" class="text-mist-dark text-sm no-underline hover:text-amber">Posts</a>
+			<form method="POST" action="/auth/signout">
+				<input type="hidden" name="callbackUrl" value="/" />
+				<button type="submit" class="text-mist-dark text-sm bg-transparent border-none cursor-pointer hover:text-amber">
+					Sign out
+				</button>
+			</form>
+		</div>
+	</nav>
 
-<main>
-	{@render children()}
-</main>
+	<main class="w-full flex-1">
+		{@render children()}
+	</main>
+</div>
