@@ -12,7 +12,7 @@
 	function fontSize(occurrences: number): string {
 		if (max === min) return '1rem';
 		const scale = (occurrences - min) / (max - min);
-		const size = 0.8 + scale * 1.2;
+		const size = 0.8 + scale * 0.6;
 		return `${size.toFixed(2)}rem`;
 	}
 
@@ -24,7 +24,7 @@
 	}
 </script>
 
-<div class="flex flex-wrap gap-1 items-center justify-center py-1">
+<div class="flex flex-wrap gap-2 items-center justify-center py-1">
 	{#each tags as tag}
 		<a
 			href="/tag/{tag.name}"

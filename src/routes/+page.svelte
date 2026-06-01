@@ -49,9 +49,9 @@
 				<div class="card-body">
 					<div class="badge bg-amber text-ocean border-none mb-2">Featured</div>
 					<h3 class="card-title text-ocean">Posting</h3>
-					<p class="text-text-muted">Finally, I have a post! Its simple, but good to have on the board.</p>
+					<p class="text-text-muted">June Planning.</p>
 					<div class="card-actions mt-2">
-						<a href="/posts/202605/hello-world">Read more →</a>
+						<a href="/posts/202606/202606-plan">Read more →</a>
 					</div>
 				</div>
 			</div>
