@@ -4,7 +4,6 @@
 </script>
 <!-- Load the Google Analytics Script -->
 <svelte:head>
-{#if !dev}
 <script async src="https://www.googletagmanager.com/gtag/js?id={measurementId}"></script>
 <script>
     import { afterNavigate } from '$app/navigation';
@@ -29,5 +28,4 @@
         });
     });
 </script>
-{/if}
 </svelte:head>
