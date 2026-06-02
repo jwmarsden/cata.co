@@ -31,6 +31,13 @@ export async function getAllTags(): Promise<Tag[]> {
 		.map(v => Tag.fromJSON(JSON.parse(v!)));
 }
 
+export async function deleteAllTags(): Promise<void> {
+	const keys = await redis.keys(`${TAGS_KEY}:*`);
+	if (keys.length) {
+		await redis.del(...keys);
+	}
+}
+
 export async function deleteTag(tagName: string): Promise<void> {
 	await redis.del(`${TAGS_KEY}:${tagName}`);
 }

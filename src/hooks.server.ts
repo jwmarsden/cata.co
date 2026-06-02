@@ -2,17 +2,18 @@ import { sequence } from '@sveltejs/kit/hooks';
 import { handle as authHandle } from './auth';
 import { redirect } from '@sveltejs/kit';
 import type { Handle, ServerInit } from '@sveltejs/kit';
-import { index_posts } from '$lib/server/posts/post-index';
-import { syncMediaTagsToRedis } from '$lib/server/tags/tag-sync';
+import { truncateTags, syncPostTagsToRedis, syncMediaTagsToRedis } from '$lib/server/tags/tag-sync';
 
 export const init: ServerInit = async () => {
-	index_posts().then(() => {
-		console.log('Finished indexing posts');
-	}).catch(err => {
+	await truncateTags().catch(err => {
+		console.error('Error truncating tags:', err);
+	});
+
+	await syncPostTagsToRedis().catch(err => {
 		console.error('Error indexing posts:', err);
 	});
 
-	syncMediaTagsToRedis().catch(err => {
+	await syncMediaTagsToRedis().catch(err => {
 		console.error('Error syncing media tags:', err);
 	});
 };

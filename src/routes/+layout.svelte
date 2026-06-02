@@ -6,7 +6,7 @@
 	import '../styles/palette.css';
 	import favicon from '$lib/assets/favicon.ico';
 	import { page } from '$app/state';
-	import { House, BookOpen, Info } from 'lucide-svelte';
+	import { House, BookOpen, Info, Menu, KeySquare } from 'lucide-svelte';
 	import Analytics from '$lib/components/Analytics.svelte';
 	let { children } = $props();
 </script>
@@ -32,10 +32,15 @@
 				<BookOpen size={14} />Posts
 			</a>
 		</li>
-		<li>
-			<a href="/about" class:active={page.url.pathname === '/about'} class="flex items-center gap-1.5 text-sm">
-				<Info size={14} />About
-			</a>
+		<li class="dropdown dropdown-end">
+			<button tabindex="0" class="flex items-center cursor-pointer bg-transparent border-none p-1 text-mist-dark hover:text-amber">
+				<Menu size={18} />
+				<!-- or: <MoreHorizontal size={18} /> -->
+			</button>
+			<ul class="dropdown-content menu bg-ocean border border-mist-dark rounded-lg shadow-lg mt-1 w-36 p-1 z-50">
+				<li><a href="/about"><Info size={14} />About</a></li>
+				<li><a href="/admin"><KeySquare size={14} />Admin</a></li>
+			</ul>
 		</li>
 	</ul>
 </nav>

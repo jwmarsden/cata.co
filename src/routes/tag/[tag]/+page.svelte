@@ -1,10 +1,11 @@
 <script lang="ts">
 	let { data } = $props();
 
-	const TYPE_LABELS: Record<string, string> = {
-		post: 'Post',
-		page: 'Page',
-		project: 'Project',
+	const TYPE_LABELS: Record<string, string[]> = {
+		post: ['Post','Posts'],
+		page: ['Page','Pages'],
+		project: ['Project','Projects'],
+		media: ['Media','Media'],
 	};
 
 	const grouped = $derived(
@@ -43,7 +44,7 @@
 				<div class="mb-8">
 					<!-- Type heading -->
 					<h2 class="text-sm font-semibold text-text-muted uppercase tracking-wider mb-3">
-						{TYPE_LABELS[type] ?? type}s
+						{TYPE_LABELS[type][1] ?? type + 's'}
 					</h2>
 
 					<div class="flex flex-col gap-3">
@@ -61,7 +62,7 @@
 											<p class="text-text-muted text-sm mt-1">{instance.url}</p>
 										</div>
 										<div class="badge bg-ocean text-mist border-none shrink-0">
-											{TYPE_LABELS[instance.type] ?? instance.type}
+											{TYPE_LABELS[instance.type][0] ?? instance.type}
 										</div>
 									</div>
 								</div>
