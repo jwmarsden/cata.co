@@ -1,6 +1,6 @@
 ---
-title: Backface Culling
-date: 2026-06-005
+title: Backface Culling (Under Development)
+date: 2026-06-05
 excerpt: Backface culling is a fundamental geometric operation that is done by discarding polygons that are facing away from a view vector.
 author: jwm
 tags: [3d, graphics, mathematics, geometry, backface-cull, three-js]
