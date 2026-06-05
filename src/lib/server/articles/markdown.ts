@@ -51,16 +51,19 @@ marked.use({
 });
 
 export function extractToc(content: string): TocEntry[] {
-	const tokens = marked.lexer(content);
 	const toc: TocEntry[] = [];
+	const headingRegex = /^(#{2,3})\s+(.+)$/gm;
+	let match;
 
-	for (const token of tokens) {
-		if (token.type === 'heading' && token.depth >= 2) {
-			const id = token.text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
-			toc.push({ title: token.text, id, level: token.depth });
-		}
+	while ((match = headingRegex.exec(content)) !== null) {
+		const level = match[1].length;
+		const text = match[2].trim();
+		const id = text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+		//console.log(`TOC entry found: level=${level} text="${text}" id="${id}"`);
+		toc.push({ title: text, id, level });
 	}
 
+	console.log(`Total TOC entries: ${toc.length}`);
 	return toc;
 }
 

@@ -87,7 +87,7 @@
 		</div>
 
 		<!-- Article body -->
-		<div class="prose prose-lg max-w-none article-content text-justify" style="word-break: break-word; text-justify: inter-word;">
+		<div class="prose prose-md max-w-none article-content text-justify" style="word-break: break-word; text-justify: inter-word;">
 			{@html data.html}
 		</div>
 
@@ -106,8 +106,8 @@
 						<a
 							href="#{entry.id}"
 							class="text-sm no-underline transition-colors leading-snug py-0.5
-								{entry.level === 3 ? 'pl-3' : ''}
-								{activeId === entry.id ? 'text-amber font-medium' : 'text-text-muted hover:text-ocean'}"
+								{entry.level === 3 ? 'pl-4 text-xs' : 'font-medium'}
+								{activeId === entry.id ? 'text-amber' : 'text-text-muted hover:text-ocean'}"
 						>
 							{entry.title}
 						</a>
