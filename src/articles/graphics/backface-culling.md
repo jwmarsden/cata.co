@@ -22,7 +22,7 @@ The most common spatial representation is looking directly down with an orthogon
 The pre-processing of this article will take the full mesh of the geometry (made up of vertices and faces) as input alongside a single vector for the view direction and demonstrate the back-face culling steps. 
 
 
-## Theory
+## Theory & Method
 
 The following section provides a formal defintion of our back-face culling process.
 
@@ -30,12 +30,38 @@ The following section provides a formal defintion of our back-face culling proce
 
 We have a mesh $M = (V, F)$ comprising:
 
-* $V$, a set of vertices where each vertex $v_i = (v_{x}, v_{y}, v_{z})$ is an ordered triplet of coordinates where $v_{x}, v_{y}, v_{z} \in \mathbb{R}$
-* $F$, a set of faces where each face $f = (v_{n},v_{o},v_{p})$ where $v_{n},v_{o},v_{p} \in V$ using a clockwise orientation for front-facing polygons
+* $V$, a set of vertices where each vertex $v = (v_{x}, v_{y}, v_{z})$ is an ordered triplet of coordinates with $v_{x}, v_{y}, v_{z} \in \mathbb{R}$
+* $F$, a set of faces where each face $f = (v_{n},v_{o},v_{p})$ with $v_{n},v_{o},v_{p} \in V$ using a clockwise orientation for the representation of front-facing polygons
 
 ### View Vector Defintion
 
-The convention we will follow is $\text{y-axis}$ up and $\text{z-axis}$ into the forward into the screen. This gives us a top down view vector $\vec{v_{view}} = \begin{bmatrix} 0, & -1, & 0 \end{bmatrix}$.
+The convention we will follow is the right-handed rule (with the $\text{y-axis}$ up and $\text{z-axis}$ forward into the screen). This gives us a top down view vector: $$\vec{e}_{view} = \begin{bmatrix} 0, & -1, & 0 \end{bmatrix}$$.
+
+The $\vec{e}_{view}$ vector will be tested against the polygons of $M$ to see if they can be discarded.
+
+### Cross Product
+
+The cross product finds the perpendicular vector $\vec{a} \times \vec{b}$ to vectors $\vec{a}$ and $\vec{b}$. Using the right-handed rule it is defined by:
+
+$$\vec{a} \times \vec{b} = \begin{bmatrix} a_2b_3 - a_3b_2, & a_3b_1 - a_1b_3, & a_1b_2 - a_2b_1 \end{bmatrix}$$
+
+The cross product is utlised to find the face normals.
+
+### Dot Product
+
+The dot product calculates a scalar value $\vec{a} \cdot \vec{b}$ evaluating the alignment of two vectors $\vec{a}$ and $\vec{b}$. It is defined by:
+
+$$ \vec{a} \cdot \vec{b} = a_xb_x + a_yb_y + a_zb_z$$
+
+A few scenarios emerge from the dot product when its used for interpreting vectors,
+
+1. If $\vec{a} \cdot \vec{b} = 1$, the vectors point in the same direction. 
+1. If $0 < (\vec{a} \cdot \vec{b}) < 1$, the angle between the vectors is $0\degree<\theta<90\degree$.
+1. If $\vec{a} \cdot \vec{b} = 0$, the vectors are perpendicular. 
+1. If $-1 < (\vec{a} \cdot \vec{b}) < 0$, the angle between the vectors is $90\degree<\theta<180\degree$.
+1. If $\vec{a} \cdot \vec{b} = -1$, the vectors point in opposite directions. 
+
+The dot product is utilsed to test $\vec{e}_{view}$ against the face normal to see if a face can be discarded.
 
 ## Implementation
 
