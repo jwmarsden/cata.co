@@ -87,7 +87,7 @@
 		</div>
 
 		<!-- Article body -->
-		<div class="prose prose-md max-w-none article-content text-justify" style="word-break: break-word; text-justify: inter-word;">
+		<div class="prose prose-md max-w-none article-content text-justify" style="word-break: break-word; text-justify: inter-word; text-align: justify; -webkit-hyphens: auto; -ms-hyphens: auto; hyphens: auto; word-break: break-word; ">
 			{@html data.html}
 		</div>
 

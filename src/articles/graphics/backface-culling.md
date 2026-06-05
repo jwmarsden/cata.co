@@ -3,14 +3,15 @@ title: Backface Culling (Under Development)
 date: 2026-06-05
 excerpt: Backface culling is a fundamental geometric operation that is done by discarding polygons that are facing away from a view vector.
 author: jwm
-tags: [3d, graphics, mathematics, geometry, backface-cull, three-js]
+tags: [3d, 2d, graphics, mathematics, geometry, optimisation, three-js]
 ---
 
 ## Introduction
 
-[Back-face culling](https://en.wikipedia.org/wiki/Back-face_culling) is the fundamental operation in which faces of a geometric mesh are discarded if they are not visible from a viewing direction. The operation is used during some methods of rendering as an optimisation that simplifies the number of polygons that are considered frame-by-frame for drawing as historically each face had a relatively high cost for render and culling in the application was a good optimisation[^1]. However, more modern [GPU](https://en.wikipedia.org/wiki/Graphics_processing_unit) pipelines tend to hold the whole mesh within [buffers in video memory](https://vulkan.lunarg.com/doc/view/1.4.309.0/linux/tutorial/html/13-init_vertex_buffer.html), and the shader pipeline is very efficient at massively parallelising the fragment shading calculations and shifting all of this thinking to the graphics pipeline. 
+[Back-face culling](https://en.wikipedia.org/wiki/Back-face_culling) is the fundamental operation in which faces of a geometric mesh are discarded if they are not visible from a viewing direction. The operation is used during some methods of rendering as an optimisation that simplifies the number of polygons that are considered frame-by-frame for drawing as historically each face was in the program memory and had a relatively high cost for render[^1]. Back-face culling in the application was a good rendering optimisation[^2]. However, more modern [GPU](https://en.wikipedia.org/wiki/Graphics_processing_unit) pipelines tend to hold the whole mesh within [buffers in video memory](https://vulkan.lunarg.com/doc/view/1.4.309.0/linux/tutorial/html/13-init_vertex_buffer.html), and the shader pipeline is very efficient at massively parallelising the fragment shading calculations and shifting all of this thinking to the graphics pipeline. 
 
-[^1]: See [Retained Mode](https://en.wikipedia.org/wiki/Retained_mode) rendering examples.  
+[^1]: See [Retained Mode](https://en.wikipedia.org/wiki/Retained_mode) rendering examples.
+[^2]: https://www.gamedeveloper.com/programming/a-compact-method-for-backface-culling.
 
 Nevertheless, like all mathematics, the theory is relevant to understand for a range of problems. Examples include when programming [vertex and fragment shaders](https://en.wikipedia.org/wiki/Shader) and when considering if an object occurs within a [view frustum](https://en.wikipedia.org/wiki/Viewing_frustum).  
 
