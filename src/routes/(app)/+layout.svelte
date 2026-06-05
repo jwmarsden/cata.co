@@ -3,10 +3,10 @@
 <link href="https://fonts.googleapis.com/css2?family=ABeeZee:ital@0;1&display=swap" rel="stylesheet">
 
 <script lang="ts">
-	import '../styles/palette.css';
+	import '../../styles/palette.css';
 	import favicon from '$lib/assets/favicon.ico';
 	import { page } from '$app/state';
-	import { House, BookOpen, Info, Menu, KeySquare } from 'lucide-svelte';
+	import { House, BookOpen, Info, Menu, FileText, KeySquare } from 'lucide-svelte';
 	import Analytics from '$lib/components/Analytics.svelte';
 	let { children } = $props();
 </script>
@@ -25,6 +25,11 @@
 		<li>
 			<a href="/" class:active={page.url.pathname === '/'} class="flex items-center gap-1.5 text-sm">
 				<House size={14} />Home
+			</a>
+		</li>
+		<li>
+			<a href="/articles" class:active={page.url.pathname.startsWith('/articles')} class="flex items-center gap-1.5 text-sm">
+				<FileText size={14} />Articles
 			</a>
 		</li>
 		<li>

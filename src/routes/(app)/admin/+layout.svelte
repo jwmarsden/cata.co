@@ -8,7 +8,7 @@
 		<div class="flex items-center gap-6">
 			<a href="/admin" class="text-mist-dark text-sm no-underline hover:text-amber">Dashboard</a>
 			<a href="/admin/media" class="text-mist-dark text-sm no-underline hover:text-amber">Media</a>
-			<a href="/admin/posts" class="text-mist-dark text-sm no-underline hover:text-amber">Posts</a>
+			<a href="/admin/scenes" class="text-mist-dark text-sm no-underline hover:text-amber">Scenes</a>
 			<form method="POST" action="/auth/signout">
 				<input type="hidden" name="callbackUrl" value="/" />
 				<button type="submit" class="text-mist-dark text-sm bg-transparent border-none cursor-pointer hover:text-amber">

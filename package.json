@@ -31,6 +31,7 @@
 		"@types/ioredis": "^4.28.10",
 		"@types/marked": "^5.0.2",
 		"@types/node": "^24",
+		"@types/three": "^0.184.1",
 		"better-auth": "~1.4.21",
 		"drizzle-kit": "^0.31.10",
 		"drizzle-orm": "^0.45.2",
@@ -43,6 +44,7 @@
 		"prettier-plugin-svelte": "^3.5.1",
 		"svelte": "^5.55.2",
 		"svelte-check": "^4.4.6",
+		"three": "^0.184.0",
 		"typescript": "^6.0.2",
 		"typescript-eslint": "^8.58.1",
 		"vite": "^8.0.7"
