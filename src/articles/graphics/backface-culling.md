@@ -1,9 +1,10 @@
 ---
 title: Backface Culling (Under Development)
 date: 2026-06-05
-excerpt: Backface culling is a fundamental geometric operation that is done by discarding polygons that are facing away from a view vector.
+updated:
+excerpt: Backface culling is a fundamental geometric operation that discards polygons that are facing away from a view vector.
 author: jwm
-tags: [3d, 2d, graphics, mathematics, geometry, optimisation, three-js]
+tags: [3d, 2d, graphics, mathematics, linear-algebra, geometry, rendering, three-js]
 ---
 
 ## Introduction
@@ -15,14 +16,11 @@ tags: [3d, 2d, graphics, mathematics, geometry, optimisation, three-js]
 
 Nevertheless, like all mathematics, the theory is relevant to understand for a range of problems. Examples include when programming [vertex and fragment shaders](https://en.wikipedia.org/wiki/Shader) and when considering if an object occurs within a [view frustum](https://en.wikipedia.org/wiki/Viewing_frustum).  
 
-This article focuses on a use case where three-dimensional real-world geometry is being pre-processed in a process to find a two-dimensional spatial representation for usage within a [Geographical Information System (GIS)](https://www.esri.com/en-us/what-is-gis/). 
+The wider use case motivating this article is where three-dimensional real-world geometry is being pre-processed in a process to find a two-dimensional spatial representation for usage within a [Geographical Information System (GIS)](https://www.esri.com/en-us/what-is-gis/). The most common spatial representation is looking directly down with an orthogonal view onto a flat plane of spatial shapes. In reality, things are more complex with a modern map (consider the buildings that are available in the built-up areas on a [lot of maps](https://www.bing.com/maps/?cp=-34.922501%7E138.593504&lvl=17.5&style=3d&eh=34.63)) but this article will follow the simpler paradigm. The objective is to view our mesh from a view vector looking directly downwards. Essentially we are creating top-down two-dimensional silhouette corresponding to the three-dimensional geometry as it would be seen from above. 
 
-The most common spatial representation is looking directly down with an orthogonal view onto a flat plane of spatial shapes. In reality, things are more complex with a modern map (consider the buildings that are available in the built-up areas on a [lot of maps](https://www.bing.com/maps/?cp=-34.922501%7E138.593504&lvl=17.5&style=3d&eh=34.63)) but this article will follow the simpler paradigm. The objective is to view our mesh from a view vector looking directly downwards. Essentially we are creating top-down two-dimensional silhouette corresponding to the three-dimensional geometry as it would be seen from above. 
+This article will focus on taking a full mesh of the geometry (made up of vertices and faces) alongside a vector for the view direction as inputs and explain in detail the step to implement a process to discard any back-facing polgyons. 
 
-The pre-processing of this article will take the full mesh of the geometry (made up of vertices and faces) as input alongside a single vector for the view direction and demonstrate the back-face culling steps. 
-
-
-## Theory & Method
+## Definition & Method
 
 The following section provides a formal defintion of our back-face culling process.
 
@@ -37,7 +35,7 @@ We have a mesh $M = (V, F)$ comprising:
 
 The convention we will follow is the right-handed rule (with the $\text{y-axis}$ up and $\text{z-axis}$ forward into the screen). This gives us a top down view vector: $$\vec{e}_{view} = \begin{bmatrix} 0, & -1, & 0 \end{bmatrix}$$.
 
-The $\vec{e}_{view}$ vector will be tested against the polygons of $M$ to see if they can be discarded.
+The $\vec{v}_{view}$ vector will be tested against the polygons of $M$ to see if they can be discarded.
 
 ### Cross Product
 
@@ -61,7 +59,22 @@ A few scenarios emerge from the dot product when its used for interpreting vecto
 1. If $-1 < (\vec{a} \cdot \vec{b}) < 0$, the angle between the vectors is $90\degree<\theta<180\degree$.
 1. If $\vec{a} \cdot \vec{b} = -1$, the vectors point in opposite directions. 
 
-The dot product is utilsed to test $\vec{e}_{view}$ against the face normal to see if a face can be discarded.
+The dot product is utilsed to test $\vec{v}_{view}$ against the face normal $\vec{n}_{f}$ to see if a face can be discarded.
+
+### Processing Algorithm
+
+$
+\text{For each } f \in F \text{ with vertices } (v_{n},v_{o},v_{p}): \\
+\color{#F2A65A} \quad{\#\:calculate\:edge\:vectors\:}(\vec{e}_1,\vec{e}_2){\:from\:}v_{n}\\
+\color{#1b3a4bcc} \quad\text{Let}\:\vec{e}_1 = v_{o} - v_{n}\\
+\color{#1b3a4bcc} \quad\text{Let}\:\vec{e}_2 = v_{p} - v_{n}\\
+\color{#F2A65A} \quad{\#\:calculate\:face\:unit\:normal\:}\hat{n}_{f}\\
+\color{#1b3a4bcc} \quad\text{Let}\:\vec{n}_{f} = \vec{e}_1 \times \vec{e}_2\\
+\color{#1b3a4bcc} \quad\text{Let}\:\hat{n}_{f} = \frac{\vec{n}_{f}}{\Vert{}\vec{n}_{f}\Vert{}}\\
+\color{#F2A65A} \quad{\#\:check\:if\:the\:face\:is\:visible\:from\:}\vec{v}_{view}{\:or\:discard}\\
+\color{#1b3a4bcc} \quad\text{Let}\:z = \vec{v}_{view} \cdot \hat{n}_{f}\\
+\color{#1b3a4bcc} \quad\text{If}\:z > 0 \:\text{then}\: f \:\text{is visible else discard}\: f\\
+$
 
 ## Implementation
 
