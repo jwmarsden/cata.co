@@ -33,7 +33,7 @@ We have a mesh $M = (V, F)$ comprising:
 
 ### View Vector Defintion
 
-The convention we will follow is the right-handed rule (with the $\text{y-axis}$ up and $\text{z-axis}$ forward into the screen). This gives us a top down view vector: $$\vec{e}_{view} = \begin{bmatrix} 0, & -1, & 0 \end{bmatrix}$$.
+The convention we will follow is the right-handed rule (with the $\text{y-axis}$ up and $\text{z-axis}$ forward into the screen). This gives us a top down view vector: $$\vec{e}_{view} = \begin{bmatrix} 0, & -1, & 0 \end{bmatrix}$$
 
 The $\vec{v}_{view}$ vector will be tested against the polygons of $M$ to see if they can be discarded.
 
@@ -41,7 +41,7 @@ The $\vec{v}_{view}$ vector will be tested against the polygons of $M$ to see if
 
 The cross product finds the perpendicular vector $\vec{a} \times \vec{b}$ to vectors $\vec{a}$ and $\vec{b}$. Using the right-handed rule it is defined by:
 
-$$\vec{a} \times \vec{b} = \begin{bmatrix} a_2b_3 - a_3b_2, & a_3b_1 - a_1b_3, & a_1b_2 - a_2b_1 \end{bmatrix}$$
+$${\vec{a} \times \vec{b} =}{\begin{bmatrix} a_2b_3 - a_3b_2, & a_3b_1 - a_1b_3, & a_1b_2 - a_2b_1 \end{bmatrix}}$$
 
 The cross product is utlised to find the face normals.
 
@@ -63,40 +63,45 @@ The dot product is utilsed to test $\vec{v}_{view}$ against the face normal $\ve
 
 ### Processing Algorithm
 
+The processing algorthim is as follows (with in-line comments),
+
 $
-\text{For each } f \in F \text{ with vertices } (v_{n},v_{o},v_{p}): \\
-\color{#F2A65A} \quad{\#\:calculate\:edge\:vectors\:}(\vec{e}_1,\vec{e}_2){\:from\:}v_{n}\\
-\color{#1b3a4bcc} \quad\text{Let}\:\vec{e}_1 = v_{o} - v_{n}\\
-\color{#1b3a4bcc} \quad\text{Let}\:\vec{e}_2 = v_{p} - v_{n}\\
-\color{#F2A65A} \quad{\#\:calculate\:face\:unit\:normal\:}\hat{n}_{f}\\
-\color{#1b3a4bcc} \quad\text{Let}\:\vec{n}_{f} = \vec{e}_1 \times \vec{e}_2\\
-\color{#1b3a4bcc} \quad\text{Let}\:\hat{n}_{f} = \frac{\vec{n}_{f}}{\Vert{}\vec{n}_{f}\Vert{}}\\
-\color{#F2A65A} \quad{\#\:check\:if\:the\:face\:is\:visible\:from\:}\vec{v}_{view}{\:or\:discard}\\
-\color{#1b3a4bcc} \quad\text{Let}\:z = \vec{v}_{view} \cdot \hat{n}_{f}\\
-\color{#1b3a4bcc} \quad\text{If}\:z > 0 \:\text{then}\: f \:\text{is visible else discard}\: f\\
+\quad\normalsize\text{For each } f \in F \text{ with vertices } (v_{n},v_{o},v_{p}): \\
+\color{#f2a65a} \quad\quad\small\text{\#\:calculate\:edge\:vectors\:}(\vec{e}_1,\vec{e}_2)\text{\:from\:}v_{n}\\
+\color{#1b3a4bcc} \quad\quad\normalsize\text{Let}\:\vec{e}_1 = v_{o} - v_{n}\\
+\color{#1b3a4bcc} \quad\quad\normalsize\text{Let}\:\vec{e}_2 = v_{p} - v_{n}\\
+\color{#f2a65a} \quad\quad\small\text{\#\:calculate\:face\:unit\:normal\:}\hat{n}_{f}\\
+\color{#1b3a4bcc} \quad\quad\normalsize\text{Let}\:\vec{n}_{f} = \vec{e}_1 \times \vec{e}_2\\
+\color{#1b3a4bcc} \quad\quad\normalsize\text{Let}\:\hat{n}_{f} = \frac{\vec{n}_{f}}{\Vert{}\vec{n}_{f}\Vert{}}\\
+\color{#f2a65a} \quad\quad\small\text{\#\:check\:if\:the\:face}\text{\:is\:visible\:from\:}\vec{v}_{view}\text{\:or\:discard}\\
+\color{#1b3a4bcc} \quad\quad\normalsize\text{Let}\:z = \vec{v}_{view} \cdot \hat{n}_{f}\\
+\color{#1b3a4bcc} \quad\quad\normalsize\text{If}\:z > 0 \:\text{then}\: f \:\text{is visible else discard}\: f\\
 $
+
+The processing complexity is $O(n)$ as it is a linear function $\vert{}n\vert{}=\vert{}F\vert{}$.
 
 ## Implementation
 
+The following section is a backface culling implementation using [three.js](https://threejs.org/).
+
 ### Input Geometry
 
-Donec volutpat, velit eget sollicitudin viverra, ligula arcu bibendum velit, et ullamcorper eros diam vel neque. Phasellus feugiat nisi vel justo placerat, sed egestas metus tempor. Donec non enim ante. Vestibulum nibh neque, rutrum sit amet tortor eget, faucibus elementum massa. Curabitur dictum aliquam est, et placerat dolor maximus quis. Maecenas tincidunt, elit eget tincidunt accumsan, magna metus vulputate metus, ornare ornare metus dolor vel quam. Fusce ullamcorper leo sed elit congue mattis. Nunc eu sollicitudin diam. Suspendisse mi est, porta non massa ut, rhoncus efficitur risus. Praesent auctor blandit nulla, id lobortis mauris molestie ut.
+> 🚧 **Work in progress** — this section is still being written. 
+> The ideas are there, the words are coming.
 
-![[scene:particle-field]]
+![[scene:example-mesh]]{The input mesh and view vector}
 
 ### Cull Operation Implementation
 
-Suspendisse vel gravida dolor. Nunc pretium ex vel accumsan fringilla. Quisque aliquet scelerisque aliquam. Sed a libero felis. Curabitur condimentum elementum massa iaculis cursus. Mauris leo lorem, semper id neque vitae, mollis pulvinar risus. Vestibulum egestas at ipsum eu tincidunt. Praesent porttitor euismod quam at finibus. Fusce convallis venenatis nisl, luctus pulvinar neque condimentum nec. Donec dignissim, metus in hendrerit facilisis, est metus pretium est, laoreet dapibus ante justo sit amet erat. Proin dapibus eros non facilisis vehicula. Nunc viverra efficitur viverra.
-
+> 🚧 **Work in progress** — this section is still being written. 
+> The ideas are there, the words are coming.
 
 ### Cull Operation Result
 
-![[scene:rotating-cube]]{A rotating cube demonstrating euler angles}
-
-Duis tristique nisl lacus, vel vehicula augue faucibus sit amet. Suspendisse potenti. Aliquam gravida dolor at odio finibus, in vehicula neque rhoncus. Phasellus lectus sem, auctor id lectus at, molestie vulputate neque. Pellentesque vitae semper enim. Nunc convallis elit est, non tempus sapien ultricies in. Morbi eget lacus libero. Donec pulvinar nisi id egestas mollis.
-
-Sed dapibus, velit ac pulvinar cursus, ipsum diam bibendum massa, id lobortis erat velit sit amet nisl. Nulla facilisi. Nulla metus eros, tincidunt id odio et, sodales vestibulum velit. Etiam neque diam, mollis at faucibus eu, imperdiet vel odio. Donec tincidunt dolor vel lobortis ornare. Donec risus leo, consequat vel magna sed, rhoncus vestibulum metus. Proin sagittis laoreet lorem at imperdiet. Praesent purus lacus, imperdiet sed velit vel, eleifend finibus magna. Curabitur id lobortis ex. Sed ut convallis sem, sit amet convallis nulla.
+> 🚧 **Work in progress** — this section is still being written. 
+> The ideas are there, the words are coming.
 
 ## Conclusion
 
-Suspendisse vel gravida dolor. Nunc pretium ex vel accumsan fringilla. Quisque aliquet scelerisque aliquam. Sed a libero felis. Curabitur condimentum elementum massa iaculis cursus. Mauris leo lorem, semper id neque vitae, mollis pulvinar risus. Vestibulum egestas at ipsum eu tincidunt. Praesent porttitor euismod quam at finibus. Fusce convallis venenatis nisl, luctus pulvinar neque condimentum nec. Donec dignissim, metus in hendrerit facilisis, est metus pretium est, laoreet dapibus ante justo sit amet erat. Proin dapibus eros non facilisis vehicula. Nunc viverra efficitur viverra.
+> 🚧 **Work in progress** — this section is still being written. 
+> The ideas are there, the words are coming.
