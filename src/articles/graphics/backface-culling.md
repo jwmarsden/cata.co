@@ -1,10 +1,10 @@
 ---
-title: Backface Culling (Under Development)
+title: Backface Culling - 🚧 Work in progress
 date: 2026-06-05
 updated:
 excerpt: Backface culling is a fundamental geometric operation that discards polygons that are facing away from a view vector.
 author: jwm
-tags: [3d, 2d, graphics, mathematics, linear-algebra, geometry, rendering, three-js]
+tags: [explainer, 3d, 2d, graphics, mathematics, linear-algebra, geometry, rendering, three-js]
 ---
 
 ## Introduction
@@ -33,7 +33,7 @@ We have a mesh $M = (V, F)$ comprising:
 
 ### View Vector Defintion
 
-The convention we will follow is the right-handed rule (with the $\text{y-axis}$ up and $\text{z-axis}$ forward into the screen). This gives us a top down view vector: $$\vec{e}_{view} = \begin{bmatrix} 0, & -1, & 0 \end{bmatrix}$$
+The convention we will follow is the right-handed rule (with the $\text{y-axis}$ up and $\text{z-axis}$ into the screen). This gives us a top down view vector: $$\vec{e}_{view} = \begin{bmatrix} 0, & -1, & 0 \end{bmatrix}$$
 
 The $\vec{v}_{view}$ vector will be tested against the polygons of $M$ to see if they can be discarded.
 
@@ -41,7 +41,7 @@ The $\vec{v}_{view}$ vector will be tested against the polygons of $M$ to see if
 
 The cross product finds the perpendicular vector $\vec{a} \times \vec{b}$ to vectors $\vec{a}$ and $\vec{b}$. Using the right-handed rule it is defined by:
 
-$${\vec{a} \times \vec{b} =}{\begin{bmatrix} a_2b_3 - a_3b_2, & a_3b_1 - a_1b_3, & a_1b_2 - a_2b_1 \end{bmatrix}}$$
+$${\vec{a} \times \vec{b} =}{\begin{bmatrix} a_2b_3 - a_3b_2 \\ a_3b_1 - a_1b_3 \\ a_1b_2 - a_2b_1 \end{bmatrix}}$$
 
 The cross product is utlised to find the face normals.
 
@@ -61,7 +61,7 @@ A few scenarios emerge from the dot product when its used for interpreting vecto
 
 The dot product is utilsed to test $\vec{v}_{view}$ against the face normal $\vec{n}_{f}$ to see if a face can be discarded.
 
-### Processing Algorithm
+### Algorithm Formalisation
 
 The processing algorthim is as follows (with in-line comments),
 
@@ -73,7 +73,7 @@ $
 \color{#f2a65a} \quad\quad\small\text{\#\:calculate\:face\:unit\:normal\:}\hat{n}_{f}\\
 \color{#1b3a4bcc} \quad\quad\normalsize\text{Let}\:\vec{n}_{f} = \vec{e}_1 \times \vec{e}_2\\
 \color{#1b3a4bcc} \quad\quad\normalsize\text{Let}\:\hat{n}_{f} = \frac{\vec{n}_{f}}{\Vert{}\vec{n}_{f}\Vert{}}\\
-\color{#f2a65a} \quad\quad\small\text{\#\:check\:if\:the\:face}\text{\:is\:visible\:from\:}\vec{v}_{view}\text{\:or\:discard}\\
+\color{#f2a65a} \quad\quad\small{\text{\#\:check\:if\:the\:face}\text{\:is\:visible\:from\:}}{\vec{v}_{view}\text{\:or\:discard}}\\
 \color{#1b3a4bcc} \quad\quad\normalsize\text{Let}\:z = \vec{v}_{view} \cdot \hat{n}_{f}\\
 \color{#1b3a4bcc} \quad\quad\normalsize\text{If}\:z > 0 \:\text{then}\: f \:\text{is visible else discard}\: f\\
 $
@@ -86,10 +86,13 @@ The following section is a backface culling implementation using [three.js](http
 
 ### Input Geometry
 
-> 🚧 **Work in progress** — this section is still being written. 
-> The ideas are there, the words are coming.
+The input geometry being used for this implementation are the [Utah Teapot](https://en.wikipedia.org/wiki/Utah_teapot)[^utah-teapot] and the [Stanford Bunny](https://en.wikipedia.org/wiki/Stanford_bunny)[^stanford-bunny]. The following provides an interactive view of both models. 
 
-![[scene:example-mesh]]{The input mesh and view vector}
+![[scene:example-vector]]{Example Models}
+
+[^utah-teapot]:The Utah Teapot rendered here is available in [three.js](https://threejs.org/). The documents for it are [here](https://threejs.org/docs/#TeapotGeometry). 
+
+[^stanford-bunny]:The Stanford Bunny is being loaded in the browser from [Stanford](https://graphics.stanford.edu/~mdfisher/Data/Meshes/bunny.obj)
 
 ### Cull Operation Implementation
 

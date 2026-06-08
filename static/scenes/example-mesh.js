@@ -8,7 +8,9 @@ export function init(container) {
 	const script = document.createElement('script');
 	script.type = 'importmap';
 	script.textContent = JSON.stringify({
-		imports: { 'three': 'https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js' }
+		imports: { 
+            'three': 'https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js'
+         }
 	});
 	document.head.appendChild(script);
 	
@@ -49,20 +51,25 @@ export function init(container) {
 		scene.add(axes);
 
 		// Axis labels
-		addAxisLabel(THREE, scene, 'X', new THREE.Vector3(2.3, 0, 0), '#ff4444');
-		addAxisLabel(THREE, scene, 'Y', new THREE.Vector3(0, 2.3, 0), '#44ff44');
-		addAxisLabel(THREE, scene, 'Z', new THREE.Vector3(0, 0, 2.3), '#4488ff');
+		addAxisLabel(THREE, scene, 'x', new THREE.Vector3(2.3, 0, 0), '#ff4444');
+		addAxisLabel(THREE, scene, 'y', new THREE.Vector3(0, 2.3, 0), '#44ff44');
+		addAxisLabel(THREE, scene, 'z', new THREE.Vector3(0, 0, 2.3), '#4488ff');
 
 		// Mesh — icosahedron
-		const geometry = new THREE.IcosahedronGeometry(1, 1);
-		const material = new THREE.MeshPhongMaterial({
-			color: 0xF2A65A,
-			shininess: 60,
-			wireframe: false,
-		});
-		const mesh = new THREE.Mesh(geometry, material);
-		mesh.castShadow = true;
-		scene.add(mesh);
+		//const geometry = new THREE.IcosahedronGeometry(1, 2);
+		//const material = new THREE.MeshPhongMaterial({
+		//	color: 0xF2A65A,
+		//	shininess: 60,
+		//	wireframe: false,
+		//});
+		//const mesh = new THREE.Mesh(geometry, material);
+		//mesh.castShadow = true;
+		//scene.add(mesh);
+
+        const geometry = new tp( 50, 18 );
+        const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+        const teapot = new THREE.Mesh( geometry, material );
+        scene.add( teapot );
 
 		// Wireframe overlay
 		const wireMat = new THREE.MeshBasicMaterial({ color: 0x1B3A4B, wireframe: true, transparent: true, opacity: 0.3 });
@@ -100,7 +107,9 @@ export function init(container) {
 			updateCamera();
 		}
 
-		function onMouseUp() { isDragging = false; }
+		function onMouseUp() { 
+            isDragging = false; 
+        }
 
 		function onWheel(e) {
 			e.preventDefault();
@@ -147,7 +156,11 @@ export function init(container) {
 			}
 		}
 
-		function onTouchEnd() { isDragging = false; lastTouch = null; lastPinchDist = null; }
+		function onTouchEnd() { 
+            isDragging = false; 
+            lastTouch = null; 
+            lastPinchDist = null; 
+        }
 
 		renderer.domElement.addEventListener('mousedown', onMouseDown);
 		window.addEventListener('mousemove', onMouseMove);
