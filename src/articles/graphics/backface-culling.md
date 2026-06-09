@@ -73,7 +73,7 @@ $
 \color{#f2a65a} \quad\quad\small\text{\#\:calculate\:face\:unit\:normal\:}\hat{n}_{f}\\
 \color{#1b3a4bcc} \quad\quad\normalsize\text{Let}\:\vec{n}_{f} = \vec{e}_1 \times \vec{e}_2\\
 \color{#1b3a4bcc} \quad\quad\normalsize\text{Let}\:\hat{n}_{f} = \frac{\vec{n}_{f}}{\Vert{}\vec{n}_{f}\Vert{}}\\
-\color{#f2a65a} \quad\quad\small{\text{\#\:check\:if\:the\:face}\text{\:is\:visible\:from\:}}{\vec{v}_{view}\text{\:or\:discard}}\\
+\color{#f2a65a} \quad\quad\small{\text{\#\:check\:\:face}\text{\:visiblilty\:from\:}}\vec{v}_{view}\\
 \color{#1b3a4bcc} \quad\quad\normalsize\text{Let}\:z = \vec{v}_{view} \cdot \hat{n}_{f}\\
 \color{#1b3a4bcc} \quad\quad\normalsize\text{If}\:z > 0 \:\text{then}\: f \:\text{is visible else discard}\: f\\
 $
@@ -88,7 +88,7 @@ The following section is a backface culling implementation using [three.js](http
 
 The input geometry being used for this implementation are the [Utah Teapot](https://en.wikipedia.org/wiki/Utah_teapot)[^utah-teapot] and the [Stanford Bunny](https://en.wikipedia.org/wiki/Stanford_bunny)[^stanford-bunny]. The following provides an interactive view of both models. 
 
-![[scene:example-vector]]{Example Models}
+![[scene:base-geometry]]{Base Teapot and Bunny Mesh Objects}
 
 [^utah-teapot]:The Utah Teapot rendered here is available in [three.js](https://threejs.org/). The documents for it are [here](https://threejs.org/docs/#TeapotGeometry). 
 

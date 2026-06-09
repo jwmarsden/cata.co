@@ -1,5 +1,5 @@
 export const meta = {
-	title: 'Vector Demo',
+	title: 'Example Scene',
 	description: 'An interactive mesh with a labelled vector. Switch between geometries and toggle wireframe.',
 	height: 500,
 };

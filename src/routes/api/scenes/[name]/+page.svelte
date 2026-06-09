@@ -19,6 +19,7 @@
 </script>
 
 <style>
+	:global(body) { margin: 0; overflow: hidden; background: #1B3A4B; }
 	.scene-container { width: 100vw; height: 100vh; }
 </style>
 
