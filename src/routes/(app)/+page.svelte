@@ -34,22 +34,22 @@
 				</div>
 			</div>
 
-			<div class="card bg-mist border border-mist-dark">
+			<div class="card bg-mist border border-mist-dark border-l-4 border-l-amber">
 				<div class="card-body">
-					<div class="badge bg-ocean text-mist border-none mb-2">New</div>
-					<h3 class="card-title text-ocean">Check in!</h3>
-					<p class="text-text-muted">Check in with CaTa!</p>
+					<div class="badge bg-amber text-ocean border-none mb-2">Featured Article</div>
+					<h3 class="card-title text-ocean">Backface Culling</h3>
+					<p class="text-text-muted">Learn about the process of back-face culling in computer graphics.</p>
 					<div class="card-actions mt-2">
-						<a href="/about">Read more →</a>
+						<a href="articles/graphics/backface-culling">Read more →</a>
 					</div>
 				</div>
 			</div>
 
-			<div class="card bg-mist border border-mist-dark border-l-4 border-l-amber">
+			<div class="card bg-mist border border-mist-dark">
 				<div class="card-body">
-					<div class="badge bg-amber text-ocean border-none mb-2">Featured</div>
+					<div class="badge bg-ocean text-mist border-none mb-2">Latest Post</div>
 					<h3 class="card-title text-ocean">Posting</h3>
-					<p class="text-text-muted">June Planning.</p>
+					<p class="text-text-muted">Catch up on June Planning.</p>
 					<div class="card-actions mt-2">
 						<a href="/posts/202606/202606-plan">Read more →</a>
 					</div>

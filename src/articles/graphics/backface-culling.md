@@ -33,7 +33,7 @@ We have a mesh $M = (V, F)$ comprising:
 
 ### View Vector Defintion
 
-The convention we will follow is the right-handed rule (with the $\text{y-axis}$ up and $\text{z-axis}$ into the screen). This gives us a top down view vector: $$\vec{e}_{view} = \begin{bmatrix} 0, & -1, & 0 \end{bmatrix}$$
+The convention we will follow is the right-handed rule (with the $\text{y-axis}$ up and $\text{z-axis}$ into the screen). This gives us a top down view vector: $$\vec{v}_{view} = \begin{bmatrix} 0, & -1, & 0 \end{bmatrix}$$
 
 The $\vec{v}_{view}$ vector will be tested against the polygons of $M$ to see if they can be discarded.
 

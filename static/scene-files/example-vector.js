@@ -14,6 +14,22 @@ export function init(container) {
 	});
 	document.head.appendChild(script);
 
+	const katexCss = document.createElement('link');
+	katexCss.rel = 'stylesheet';
+	katexCss.href = 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css';
+	document.head.appendChild(katexCss);
+
+	function loadScript(src) {
+		return new Promise((resolve, reject) => {
+			if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+			const s = document.createElement('script');
+			s.src = src;
+			s.onload = resolve;
+			s.onerror = reject;
+			document.head.appendChild(s);
+		});
+	}
+
 	let animId = 0;
 	let renderer, scene, camera;
 	let isDragging = false;
@@ -88,7 +104,9 @@ export function init(container) {
 	wrapper.appendChild(ui);
 	container.appendChild(wrapper);
 
-	import('three').then(async THREE => {
+	loadScript('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js')
+		.then(() => import('three')
+		.then(async THREE => {
 		THREE_ref = THREE;
 		const w = container.clientWidth;
 		const h = container.clientHeight;
@@ -134,7 +152,7 @@ export function init(container) {
 		const arrowLength = 1.0;
 		const arrowHelper = new THREE.ArrowHelper(arrowDir, arrowOrigin, arrowLength, 0xE8F4F8, 0.25, 0.12);
 		scene.add(arrowHelper);
-		addVectorLabel(THREE, scene, 'v view', new THREE.Vector3(0.75, 3.5, 0));
+		addVectorLabel(THREE, scene, '\\vec{v}_{\\text{view}}', new THREE.Vector3(0, 3.75, 0));
 
 		await loadGeometry('teapot');
 
@@ -233,7 +251,7 @@ export function init(container) {
 			renderer.dispose();
 			container.innerHTML = '';
 		};
-	});
+	}));
 
 	function updateWireframeVisibility() {
 		if (!currentMesh) return;
@@ -399,25 +417,67 @@ export function init(container) {
 		scene.add(sprite);
 	}
 
-	function addVectorLabel(THREE, scene, text, position) {
+	function addVectorLabel(THREE, scene, latex, position, width = 90, height = 30) {
 		const canvas = document.createElement('canvas');
-		canvas.width = 128; canvas.height = 64;
+		const scale = 2;
+		canvas.width = width * scale;
+		canvas.height = height * scale;
 		const ctx = canvas.getContext('2d');
-		ctx.fillStyle = 'rgba(27, 58, 75, 0.85)';
+		ctx.scale(scale, scale);
+
+		ctx.fillStyle = 'rgba(27, 58, 75, 0.9)';
 		ctx.beginPath();
-		ctx.roundRect(4, 4, 120, 56, 12);
+		ctx.roundRect(0, 0, width, height, 8);
 		ctx.fill();
-		ctx.fillStyle = '#E8F4F8';
-		ctx.font = 'italic bold 28px serif';
-		ctx.textAlign = 'center';
-		ctx.textBaseline = 'middle';
-		ctx.fillText('v', 28, 28);
-		ctx.font = 'italic 20px serif';
-		ctx.fillText('view', 80, 36);
+
+		drawLatexToCanvas(ctx, latex, width, height);
+
 		const texture = new THREE.CanvasTexture(canvas);
-		const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true }));
+		const mat = new THREE.SpriteMaterial({ map: texture, transparent: true });
+		const sprite = new THREE.Sprite(mat);
 		sprite.position.copy(position);
-		sprite.scale.set(1.2, 0.6, 1);
+		sprite.scale.set((width / height) * 0.5, 0.5, 1);
 		scene.add(sprite);
+	}
+
+	function drawLatexToCanvas(ctx, latex, width, height) {
+		ctx.fillStyle = '#E8F4F8';
+		ctx.textBaseline = 'middle';
+
+		const cx = width / 2;
+		const cy = height / 2;
+
+		// Draw italic v
+		ctx.font = 'italic 15px serif';
+		const vW = ctx.measureText('v').width;
+		const subText = 'view';
+		ctx.font = 'italic 10px serif';
+		const subW = ctx.measureText(subText).width;
+		const totalW = vW + subW + 2;
+		const startX = cx - totalW / 2;
+
+		// Draw v
+		ctx.font = 'italic 15px serif';
+		ctx.fillText('v', startX, cy);
+
+		// Draw arrow over v
+		const arrowY = cy - 11;
+		const arrowCx = startX + vW / 2;
+		ctx.strokeStyle = '#E8F4F8';
+		ctx.lineWidth = 1;
+		ctx.beginPath();
+		ctx.moveTo(arrowCx - vW * 0.35, arrowY);
+		ctx.lineTo(arrowCx + vW * 0.35, arrowY);
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.moveTo(arrowCx + vW * 0.35, arrowY);
+		ctx.lineTo(arrowCx + vW * 0.35 - 3, arrowY - 2);
+		ctx.moveTo(arrowCx + vW * 0.35, arrowY);
+		ctx.lineTo(arrowCx + vW * 0.35 - 3, arrowY + 2);
+		ctx.stroke();
+
+		// Draw subscript
+		ctx.font = 'italic 10px serif';
+		ctx.fillText(subText, startX + vW + 2, cy + 5);
 	}
 }

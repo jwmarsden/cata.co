@@ -1,16 +1,43 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { EditorView, basicSetup } from 'codemirror';
+	import { javascript } from '@codemirror/lang-javascript';
+	import { oneDark } from '@codemirror/theme-one-dark';
+	import { EditorState } from '@codemirror/state';
 
 	let { data } = $props();
 
-	let code = $state('');
+	let editorContainer: HTMLDivElement;
+	let editorView: EditorView | null = null;
 	let saving = $state(false);
 	let saved = $state(false);
 	let previewKey = $state(0);
 
-	$effect(() => {
-		code = data.code ?? '';
+	onMount(() => {
+		editorView = new EditorView({
+			state: EditorState.create({
+				doc: data.code ?? '',
+				extensions: [
+					basicSetup,
+					javascript(),
+					oneDark,
+					EditorView.theme({
+						'&': { height: '100%', fontSize: '13px' },
+						'.cm-scroller': { overflow: 'auto', fontFamily: '"DM Mono", monospace' },
+						'.cm-content': { padding: '8px 0' },
+					}),
+					EditorView.lineWrapping,
+				],
+			}),
+			parent: editorContainer,
+		});
+
+		return () => editorView?.destroy();
 	});
+
+	function getCode(): string {
+		return editorView?.state.doc.toString() ?? '';
+	}
 
 	async function save() {
 		saving = true;
@@ -19,7 +46,7 @@
 			const res = await fetch('/api/scenes', {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ name: data.name, code }),
+				body: JSON.stringify({ name: data.name, code: getCode() }),
 			});
 			if (!res.ok) throw new Error('Save failed');
 			saved = true;
@@ -36,7 +63,6 @@
 	}
 
 	function handleKeydown(e: KeyboardEvent) {
-		// Ctrl+S or Cmd+S to save
 		if ((e.ctrlKey || e.metaKey) && e.key === 's') {
 			e.preventDefault();
 			save();
@@ -90,21 +116,16 @@
 	<div class="flex-1 flex min-h-0">
 
 		<!-- Code editor -->
-		<div class="w-1/2 flex flex-col border-r border-mist-dark/30">
-			<div class="px-4 py-1.5 bg-ocean/80 text-xs text-mist-dark font-mono border-b border-mist-dark/30">
-				{data.source === 'bucket' ? '☁' : '📁'} src/scenes/{data.name}.js
+		<div class="w-1/2 flex flex-col border-r border-mist-dark/30 min-h-0">
+			<div class="px-4 py-1.5 bg-ocean/80 text-xs text-mist-dark font-mono border-b border-mist-dark/30 shrink-0">
+				{data.source === 'bucket' ? '☁' : '📁'} scenes/{data.name}.js
 			</div>
-			<textarea
-				class="flex-1 font-mono text-sm p-4 resize-none border-none outline-none leading-relaxed"
-				style="background: #0d2233; color: #E8F4F8; tab-size: 2;"
-				bind:value={code}
-				spellcheck="false"
-			></textarea>
+			<div class="flex-1 overflow-hidden" bind:this={editorContainer}></div>
 		</div>
 
 		<!-- Preview -->
 		<div class="w-1/2 flex flex-col">
-			<div class="px-4 py-1.5 bg-base-200 text-xs text-text-muted font-mono border-b border-mist-dark/30 flex items-center justify-between">
+			<div class="px-4 py-1.5 bg-base-200 text-xs text-text-muted font-mono border-b border-mist-dark/30 flex items-center justify-between shrink-0">
 				<span>Preview — /scenes/{data.name}</span>
 				<a
 					href="/scenes/{data.name}"
@@ -125,3 +146,12 @@
 
 	</div>
 </div>
+
+<style>
+	:global(.cm-editor) {
+		height: 100%;
+	}
+	:global(.cm-editor.cm-focused) {
+		outline: none;
+	}
+</style>
