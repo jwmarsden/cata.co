@@ -1,44 +1,33 @@
+import {
+	addAxesWithLabels,
+	addVectorLabel,
+	extractGeometryData,
+	createCameraAnimator,
+	makeButton,
+	makeUIContainer,
+} from '/api/scenes/lib/scene-utils.js';
+
 export const meta = {
-	title: 'Example Scene',
+	title: 'Vector Demo',
 	description: 'An interactive mesh with a labelled vector. Switch between geometries and toggle wireframe.',
 	height: 500,
 };
 
 export function init(container) {
-	const script = document.createElement('script');
-	script.type = 'importmap';
-	script.textContent = JSON.stringify({
-		imports: {
-			'three': 'https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js'
-		}
-	});
-	document.head.appendChild(script);
-
-	const katexCss = document.createElement('link');
-	katexCss.rel = 'stylesheet';
-	katexCss.href = 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css';
-	document.head.appendChild(katexCss);
-
-	function loadScript(src) {
-		return new Promise((resolve, reject) => {
-			if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
-			const s = document.createElement('script');
-			s.src = src;
-			s.onload = resolve;
-			s.onerror = reject;
-			document.head.appendChild(s);
-		});
-	}
-
 	let animId = 0;
 	let renderer, scene, camera;
 	let isDragging = false;
 	let previousMouse = { x: 0, y: 0 };
-	let spherical = { theta: Math.PI / 4, phi: Math.PI / 3, radius: 8 }; // zoomed out
+	let spherical = { theta: Math.PI / 4, phi: Math.PI / 3, radius: 8 };
 	let currentMesh = null;
 	let wireframeMesh = null;
-	let showWireframe = true; // on by default
+	let showWireframe = true;
 	let THREE_ref = null;
+	let isTopView = false;
+	let topViewBtn = null;
+	let cameraAnim = null;
+	let arrowHelper = null;
+	let vectorLabelSprite = null;
 
 	const GEOMETRIES = [
 		{ value: 'teapot', label: '🫖 Teapot' },
@@ -46,13 +35,9 @@ export function init(container) {
 	];
 
 	// --- UI ---
-	const ui = document.createElement('div');
-	ui.style.cssText = `
-		position: absolute; top: 12px; left: 12px;
-		display: flex; align-items: center; gap: 10px; z-index: 10; flex-wrap: wrap;
-		font-family: 'DM Sans', sans-serif;
-	`;
+	const ui = makeUIContainer();
 
+	// Geometry dropdown
 	const select = document.createElement('select');
 	select.style.cssText = `
 		padding: 6px 10px;
@@ -74,6 +59,7 @@ export function init(container) {
 	select.addEventListener('change', () => loadGeometry(select.value));
 	ui.appendChild(select);
 
+	// Wireframe checkbox
 	const wireLabel = document.createElement('label');
 	wireLabel.style.cssText = `
 		display: flex; align-items: center; gap: 6px;
@@ -89,7 +75,7 @@ export function init(container) {
 	`;
 	const wireCheckbox = document.createElement('input');
 	wireCheckbox.type = 'checkbox';
-	wireCheckbox.checked = true; // on by default
+	wireCheckbox.checked = true;
 	wireCheckbox.style.cursor = 'pointer';
 	wireCheckbox.addEventListener('change', () => {
 		showWireframe = wireCheckbox.checked;
@@ -99,15 +85,194 @@ export function init(container) {
 	wireLabel.appendChild(document.createTextNode('Wireframe'));
 	ui.appendChild(wireLabel);
 
+	// Top view button
+	topViewBtn = makeButton('👁 View', () => toggleTopView());
+	ui.appendChild(topViewBtn);
+
 	const wrapper = document.createElement('div');
 	wrapper.style.cssText = 'position: relative; width: 100%; height: 100%;';
 	wrapper.appendChild(ui);
 	container.appendChild(wrapper);
 
-	loadScript('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js')
-		.then(() => import('three')
-		.then(async THREE => {
+	function updateCamera() {
+		if (!camera) return;
+		const x = spherical.radius * Math.sin(spherical.phi) * Math.sin(spherical.theta);
+		const y = spherical.radius * Math.cos(spherical.phi);
+		const z = spherical.radius * Math.sin(spherical.phi) * Math.cos(spherical.theta);
+		camera.position.set(x, y, z);
+		camera.lookAt(0, 1.5, 0);
+	}
+
+	function toggleTopView() {
+		if (!cameraAnim || cameraAnim.isAnimating()) return;
+		if (!isTopView) {
+			cameraAnim.animateTo({ theta: spherical.theta, phi: 0.01, radius: spherical.radius });
+			isTopView = true;
+			topViewBtn.textContent = '↩ Restore';
+			// Hide arrow and label
+			if (arrowHelper) arrowHelper.visible = false;
+			if (vectorLabelSprite) vectorLabelSprite.visible = false;
+		} else {
+			cameraAnim.animateTo({ theta: Math.PI / 4, phi: Math.PI / 3, radius: 8 });
+			isTopView = false;
+			topViewBtn.textContent = '👁 View';
+			// Restore arrow and label
+			if (arrowHelper) arrowHelper.visible = true;
+			if (vectorLabelSprite) vectorLabelSprite.visible = true;
+		}
+	}
+
+	function updateWireframeVisibility() {
+		if (!currentMesh) return;
+		const wfMeshes = [];
+		currentMesh.traverse(child => {
+			if (child.isMesh && child.material?.wireframe) wfMeshes.push(child);
+		});
+		for (const m of wfMeshes) m.visible = showWireframe;
+	}
+
+	function showError(msg) {
+		const err = document.createElement('div');
+		err.style.cssText = `
+			position: absolute; bottom: 12px; left: 12px;
+			color: #ff6b6b; font-size: 12px;
+			font-family: 'DM Sans', sans-serif;
+			background: rgba(0,0,0,0.6);
+			padding: 6px 10px; border-radius: 4px;
+		`;
+		err.textContent = msg;
+		wrapper.appendChild(err);
+		setTimeout(() => err.remove(), 5000);
+	}
+
+	function removeMesh() {
+		if (!currentMesh || !scene) return;
+		scene.remove(currentMesh);
+		const toDispose = [];
+		currentMesh.traverse?.(child => toDispose.push(child));
+		for (const child of toDispose) {
+			child.geometry?.dispose();
+			if (child.material) {
+				Array.isArray(child.material)
+					? child.material.forEach(m => m.dispose())
+					: child.material.dispose();
+			}
+		}
+		currentMesh = null;
+		wireframeMesh = null;
+	}
+
+	async function loadGeometry(type) {
+		if (!THREE_ref || !scene) return;
+		removeMesh();
+
+		if (type === 'teapot') {
+			const { TeapotGeometry } = await import(
+				'https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/geometries/TeapotGeometry.js'
+			);
+
+			const teapotGeom = new TeapotGeometry(0.8, 10);
+			const material = new THREE_ref.MeshPhongMaterial({
+				color: 0xF2A65A,
+				shininess: 80,
+				specular: 0x444444,
+			});
+			const mesh = new THREE_ref.Mesh(teapotGeom, material);
+			mesh.rotation.y = Math.PI / 4;
+
+			const box = new THREE_ref.Box3().setFromObject(mesh);
+			mesh.position.y = -box.min.y;
+
+			const wireMat = new THREE_ref.MeshBasicMaterial({
+				color: 0xE8F4F8,
+				wireframe: true,
+				transparent: true,
+				opacity: 0.25,
+			});
+			wireframeMesh = new THREE_ref.Mesh(teapotGeom, wireMat);
+			wireframeMesh.rotation.y = Math.PI / 4;
+			wireframeMesh.position.copy(mesh.position);
+			wireframeMesh.visible = showWireframe;
+
+			currentMesh = new THREE_ref.Group();
+			currentMesh.add(mesh);
+			currentMesh.add(wireframeMesh);
+			scene.add(currentMesh);
+
+			const { vertices, faces } = extractGeometryData(teapotGeom);
+			console.log(`Teapot: ${vertices.length / 3} vertices, ${faces.length / 3} faces`);
+
+		} else if (type === 'bunny') {
+			const { OBJLoader } = await import(
+				'https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/loaders/OBJLoader.js'
+			);
+
+			const loader = new OBJLoader();
+			loader.load(
+				'/api/proxy?url=https://graphics.stanford.edu/~mdfisher/Data/Meshes/bunny.obj',
+				(obj) => {
+					obj.rotation.y = +Math.PI / 4;
+
+					const box = new THREE_ref.Box3().setFromObject(obj);
+					const size = box.getSize(new THREE_ref.Vector3());
+					const maxDim = Math.max(size.x, size.y, size.z);
+					const scale = 2.5 / maxDim;
+					obj.scale.setScalar(scale);
+
+					const box2 = new THREE_ref.Box3().setFromObject(obj);
+					obj.position.y = -box2.min.y;
+
+					const meshes = [];
+					obj.traverse(child => {
+						if (child.isMesh) meshes.push(child);
+					});
+
+					wireframeMesh = null;
+					let allVertices = [];
+					let allFaces = [];
+					let vertexOffset = 0;
+
+					for (const child of meshes) {
+						child.material = new THREE_ref.MeshPhongMaterial({
+							color: 0xF2A65A,
+							shininess: 60,
+						});
+
+						const wireMat = new THREE_ref.MeshBasicMaterial({
+							color: 0xE8F4F8,
+							wireframe: true,
+							transparent: true,
+							opacity: 0.25,
+						});
+						const wm = new THREE_ref.Mesh(child.geometry, wireMat);
+						wm.visible = showWireframe;
+						child.add(wm);
+						if (!wireframeMesh) wireframeMesh = wm;
+
+						const { vertices, faces } = extractGeometryData(child.geometry);
+						allVertices = allVertices.concat(vertices);
+						allFaces = allFaces.concat(faces.map(i => i + vertexOffset));
+						vertexOffset += vertices.length / 3;
+					}
+
+					currentMesh = obj;
+					scene.add(currentMesh);
+
+					console.log(`Bunny: ${allVertices.length / 3} vertices, ${allFaces.length / 3} faces`);
+				},
+				undefined,
+				(err) => {
+					console.error('Bunny load failed:', err);
+					showError('Failed to load bunny.');
+				}
+			);
+		}
+	}
+
+	import('three').then(async THREE => {
 		THREE_ref = THREE;
+		cameraAnim = createCameraAnimator(spherical, updateCamera);
+
 		const w = container.clientWidth;
 		const h = container.clientHeight;
 
@@ -123,6 +288,7 @@ export function init(container) {
 		camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 100);
 		updateCamera();
 
+		// Lighting
 		scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 		const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
 		dirLight.position.set(5, 8, 5);
@@ -137,22 +303,23 @@ export function init(container) {
 		grid.position.y = -0.001;
 		scene.add(grid);
 
-		// Axes at y=0
-		const axes = new THREE.AxesHelper(2);
-		axes.position.y = 0;
-		scene.add(axes);
-		addAxisLabel(THREE, scene, 'x', new THREE.Vector3(2.3, 0, 0), '#ff4444');
-		addAxisLabel(THREE, scene, 'y', new THREE.Vector3(0, 2.3, 0), '#44ff44');
-		addAxisLabel(THREE, scene, 'z', new THREE.Vector3(0, 0, 2.3), '#4488ff');
+		// Axes with labels from library
+		addAxesWithLabels(THREE, scene, 2);
 
-		// Arrow — above geometry, pointing down
-		// Will be repositioned after geometry loads but start high
+		// Arrow — v_view above geometry pointing down
 		const arrowOrigin = new THREE.Vector3(0, 3.5, 0);
 		const arrowDir = new THREE.Vector3(0, -1, 0);
-		const arrowLength = 1.0;
-		const arrowHelper = new THREE.ArrowHelper(arrowDir, arrowOrigin, arrowLength, 0xE8F4F8, 0.25, 0.12);
+		// Arrow — v_view above geometry pointing down
+		arrowHelper = new THREE.ArrowHelper(arrowDir, arrowOrigin, 1.0, 0xE8F4F8, 0.25, 0.12);
 		scene.add(arrowHelper);
-		addVectorLabel(THREE, scene, '\\vec{v}_{\\text{view}}', new THREE.Vector3(0, 3.75, 0));
+
+		// Vector label from library — store the returned sprite
+		vectorLabelSprite = addVectorLabel(THREE, scene, {
+			main: 'v',
+			sub: 'view',
+			vec: true,
+			position: new THREE.Vector3(0, 3.5, 0),
+		});
 
 		await loadGeometry('teapot');
 
@@ -179,6 +346,7 @@ export function init(container) {
 
 		let lastTouch = null;
 		let lastPinchDist = null;
+
 		function onTouchStart(e) {
 			if (e.touches.length === 1) {
 				isDragging = true;
@@ -213,7 +381,11 @@ export function init(container) {
 				lastPinchDist = dist;
 			}
 		}
-		function onTouchEnd() { isDragging = false; lastTouch = null; lastPinchDist = null; }
+		function onTouchEnd() {
+			isDragging = false;
+			lastTouch = null;
+			lastPinchDist = null;
+		}
 
 		renderer.domElement.addEventListener('mousedown', onMouseDown);
 		window.addEventListener('mousemove', onMouseMove);
@@ -234,6 +406,7 @@ export function init(container) {
 
 		function animate() {
 			animId = requestAnimationFrame(animate);
+			cameraAnim.tick(performance.now());
 			renderer.render(scene, camera);
 		}
 		animate();
@@ -251,233 +424,5 @@ export function init(container) {
 			renderer.dispose();
 			container.innerHTML = '';
 		};
-	}));
-
-	function updateWireframeVisibility() {
-		if (!currentMesh) return;
-		const wfMeshes = [];
-		currentMesh.traverse(child => {
-			if (child.isMesh && child.material?.wireframe) {
-				wfMeshes.push(child);
-			}
-		});
-		for (const m of wfMeshes) {
-			m.visible = showWireframe;
-		}
-	}
-
-	async function loadGeometry(type) {
-		if (!THREE_ref || !scene) return;
-		removeMesh();
-
-		if (type === 'teapot') {
-			const { TeapotGeometry } = await import(
-				'https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/geometries/TeapotGeometry.js'
-			);
-
-			const geometry = new TeapotGeometry(0.8, 10);
-			const material = new THREE_ref.MeshPhongMaterial({
-				color: 0xF2A65A,
-				shininess: 80,
-				specular: 0x444444,
-			});
-			const mesh = new THREE_ref.Mesh(geometry, material);
-
-			const box = new THREE_ref.Box3().setFromObject(mesh);
-			mesh.position.y = -box.min.y;
-
-			const wireMat = new THREE_ref.MeshBasicMaterial({
-				color: 0xE8F4F8,
-				wireframe: true,
-				transparent: true,
-				opacity: 0.25,
-			});
-			wireframeMesh = new THREE_ref.Mesh(geometry, wireMat);
-			wireframeMesh.position.copy(mesh.position);
-			wireframeMesh.visible = showWireframe;
-
-			currentMesh = new THREE_ref.Group();
-			currentMesh.add(mesh);
-			currentMesh.add(wireframeMesh);
-			scene.add(currentMesh);
-
-		} else if (type === 'bunny') {
-			const { OBJLoader } = await import(
-				'https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/loaders/OBJLoader.js'
-			);
-
-			const loader = new OBJLoader();
-			loader.load(
-				'/api/proxy?url=https://graphics.stanford.edu/~mdfisher/Data/Meshes/bunny.obj',
-				(obj) => {
-					// Rotate on Y axis
-					obj.rotation.y = Math.PI / 2;
-
-					const box = new THREE_ref.Box3().setFromObject(obj);
-					const size = box.getSize(new THREE_ref.Vector3());
-					const maxDim = Math.max(size.x, size.y, size.z);
-					const scale = 2.5 / maxDim;
-					obj.scale.setScalar(scale);
-
-					// Recompute box after scale and rotation
-					const box2 = new THREE_ref.Box3().setFromObject(obj);
-					obj.position.y = -box2.min.y;
-
-					const meshes = [];
-					obj.traverse(child => {
-						if (child.isMesh) meshes.push(child);
-					});
-
-					wireframeMesh = null;
-					for (const child of meshes) {
-						child.material = new THREE_ref.MeshPhongMaterial({
-							color: 0xF2A65A,
-							shininess: 60,
-						});
-
-						const wireMat = new THREE_ref.MeshBasicMaterial({
-							color: 0xE8F4F8,
-							wireframe: true,
-							transparent: true,
-							opacity: 0.25,
-						});
-						const wm = new THREE_ref.Mesh(child.geometry, wireMat);
-						wm.visible = showWireframe;
-						child.add(wm);
-
-						if (!wireframeMesh) wireframeMesh = wm;
-					}
-
-					currentMesh = obj;
-					scene.add(currentMesh);
-				},
-				undefined,
-				(err) => {
-					console.error('Bunny load failed:', err);
-					showError('Failed to load bunny.');
-				}
-			);
-		}
-	}
-
-	function removeMesh() {
-		if (currentMesh && scene) {
-			scene.remove(currentMesh);
-			const toDispose = [];
-			currentMesh.traverse?.(child => toDispose.push(child));
-			for (const child of toDispose) {
-				child.geometry?.dispose();
-				if (child.material) {
-					Array.isArray(child.material)
-						? child.material.forEach(m => m.dispose())
-						: child.material.dispose();
-				}
-			}
-			currentMesh = null;
-			wireframeMesh = null;
-		}
-	}
-
-	function showError(msg) {
-		const err = document.createElement('div');
-		err.style.cssText = `
-			position: absolute; bottom: 12px; left: 12px;
-			color: #ff6b6b; font-size: 12px;
-			font-family: 'DM Sans', sans-serif;
-			background: rgba(0,0,0,0.6);
-			padding: 6px 10px; border-radius: 4px;
-		`;
-		err.textContent = msg;
-		wrapper.appendChild(err);
-		setTimeout(() => err.remove(), 5000);
-	}
-
-	function updateCamera() {
-		if (!camera) return;
-		const x = spherical.radius * Math.sin(spherical.phi) * Math.sin(spherical.theta);
-		const y = spherical.radius * Math.cos(spherical.phi);
-		const z = spherical.radius * Math.sin(spherical.phi) * Math.cos(spherical.theta);
-		camera.position.set(x, y, z);
-		camera.lookAt(0, 1.5, 0);
-	}
-
-	function addAxisLabel(THREE, scene, text, position, color) {
-		const canvas = document.createElement('canvas');
-		canvas.width = 64; canvas.height = 64;
-		const ctx = canvas.getContext('2d');
-		ctx.fillStyle = color;
-		ctx.font = 'bold 48px sans-serif';
-		ctx.textAlign = 'center';
-		ctx.textBaseline = 'middle';
-		ctx.fillText(text, 32, 32);
-		const texture = new THREE.CanvasTexture(canvas);
-		const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true }));
-		sprite.position.copy(position);
-		sprite.scale.set(0.4, 0.4, 1);
-		scene.add(sprite);
-	}
-
-	function addVectorLabel(THREE, scene, latex, position, width = 90, height = 30) {
-		const canvas = document.createElement('canvas');
-		const scale = 2;
-		canvas.width = width * scale;
-		canvas.height = height * scale;
-		const ctx = canvas.getContext('2d');
-		ctx.scale(scale, scale);
-
-		ctx.fillStyle = 'rgba(27, 58, 75, 0.9)';
-		ctx.beginPath();
-		ctx.roundRect(0, 0, width, height, 8);
-		ctx.fill();
-
-		drawLatexToCanvas(ctx, latex, width, height);
-
-		const texture = new THREE.CanvasTexture(canvas);
-		const mat = new THREE.SpriteMaterial({ map: texture, transparent: true });
-		const sprite = new THREE.Sprite(mat);
-		sprite.position.copy(position);
-		sprite.scale.set((width / height) * 0.5, 0.5, 1);
-		scene.add(sprite);
-	}
-
-	function drawLatexToCanvas(ctx, latex, width, height) {
-		ctx.fillStyle = '#E8F4F8';
-		ctx.textBaseline = 'middle';
-
-		const cx = width / 2;
-		const cy = height / 2;
-
-		// Draw italic v
-		ctx.font = 'italic 15px serif';
-		const vW = ctx.measureText('v').width;
-		const subText = 'view';
-		ctx.font = 'italic 10px serif';
-		const subW = ctx.measureText(subText).width;
-		const totalW = vW + subW + 2;
-		const startX = cx - totalW / 2;
-
-		// Draw v
-		ctx.font = 'italic 15px serif';
-		ctx.fillText('v', startX, cy);
-
-		// Draw arrow over v
-		const arrowY = cy - 11;
-		const arrowCx = startX + vW / 2;
-		ctx.strokeStyle = '#E8F4F8';
-		ctx.lineWidth = 1;
-		ctx.beginPath();
-		ctx.moveTo(arrowCx - vW * 0.35, arrowY);
-		ctx.lineTo(arrowCx + vW * 0.35, arrowY);
-		ctx.stroke();
-		ctx.beginPath();
-		ctx.moveTo(arrowCx + vW * 0.35, arrowY);
-		ctx.lineTo(arrowCx + vW * 0.35 - 3, arrowY - 2);
-		ctx.moveTo(arrowCx + vW * 0.35, arrowY);
-		ctx.lineTo(arrowCx + vW * 0.35 - 3, arrowY + 2);
-		ctx.stroke();
-
-		// Draw subscript
-		ctx.font = 'italic 10px serif';
-		ctx.fillText(subText, startX + vW + 2, cy + 5);
-	}
+	});
 }

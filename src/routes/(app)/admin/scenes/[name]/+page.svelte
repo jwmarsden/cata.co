@@ -1,3 +1,14 @@
+<svelte:head>
+	<script type="importmap">
+		{
+			"imports": {
+				"three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+				"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+			}
+		}
+	</script>
+</svelte:head>
+
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { EditorView, basicSetup } from 'codemirror';

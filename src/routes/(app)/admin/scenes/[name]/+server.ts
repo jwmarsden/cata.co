@@ -6,32 +6,48 @@ import { BUCKET_NAME } from '$env/static/private';
 import { json, error } from '@sveltejs/kit';
 import { DeleteObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 
-const STATIC_SCENES_DIR = path.resolve('static/scene-files');
+const STATIC_DIR = path.resolve('static/scene-files');
 const BUCKET_PREFIX = 'scenes/';
 
-export async function GET({ params, locals }) {
-	const session = await locals.auth();
-	if (!session?.user) error(401, 'Unauthorized');
 
+export async function GET({ params }) {
 	const { name } = params;
 
 	// Try bucket first
 	try {
+		await s3.send(new HeadObjectCommand({
+			Bucket: BUCKET_NAME,
+			Key: `${BUCKET_PREFIX}${name}.js`,
+		}));
+
 		const res = await s3.send(new GetObjectCommand({
 			Bucket: BUCKET_NAME,
 			Key: `${BUCKET_PREFIX}${name}.js`,
 		}));
+
 		const code = await res.Body?.transformToString();
-		if (code) return json({ code, source: 'bucket' });
+		if (!code) error(404, 'Empty scene');
+
+		return new Response(code, {
+			headers: {
+				'Content-Type': 'application/javascript',
+				'Cache-Control': 'no-cache',
+			},
+		});
 	} catch {
-		// Not in bucket, fall through to static
+		// Not in bucket, fall through
 	}
 
 	// Fall back to static
-	const staticPath = path.join(STATIC_SCENES_DIR, `${name}.js`);
+	const staticPath = path.join(STATIC_DIR, `${name}.js`);
 	if (fs.existsSync(staticPath)) {
 		const code = fs.readFileSync(staticPath, 'utf-8');
-		return json({ code, source: 'static' });
+		return new Response(code, {
+			headers: {
+				'Content-Type': 'application/javascript',
+				'Cache-Control': 'no-cache',
+			},
+		});
 	}
 
 	error(404, 'Scene not found');

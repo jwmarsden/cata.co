@@ -1,3 +1,14 @@
+<svelte:head>
+	<script type="importmap">
+		{
+			"imports": {
+				"three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+				"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+			}
+		}
+	</script>
+</svelte:head>
+
 <script lang="ts">
 	import { onMount } from 'svelte';
 
@@ -6,7 +17,9 @@
 
 	onMount(async () => {
 		try {
-			const mod = await import(/* @vite-ignore */ data.scriptUrl);
+			// Always load via your own server, never direct bucket URL
+			const scriptUrl = `/api/scenes/${data.name}/script`;
+			const mod = await import(/* @vite-ignore */ scriptUrl);
 			const cleanup = mod.init(container);
 			return cleanup;
 		} catch (e) {
