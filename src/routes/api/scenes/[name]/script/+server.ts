@@ -10,7 +10,6 @@ const STATIC_DIR = path.resolve('static/scene-files');
 
 export async function GET({ params }) {
 	const { name } = params;
-	//console.log('Looking for scene:', name);
 
 	// Try bucket first
 	try {
@@ -18,14 +17,27 @@ export async function GET({ params }) {
 			Bucket: BUCKET_NAME,
 			Key: `${BUCKET_PREFIX}${name}.js`,
 		}));
-		//console.log('Found in bucket');
+
+		const res = await s3.send(new GetObjectCommand({
+			Bucket: BUCKET_NAME,
+			Key: `${BUCKET_PREFIX}${name}.js`,
+		}));
+
+		const code = await res.Body?.transformToString();
+		if (!code) error(404, 'Empty scene');
+
+		return new Response(code, {
+			headers: {
+				'Content-Type': 'application/javascript',
+				'Cache-Control': 'no-cache',
+			},
+		});
 	} catch {
-		//console.log('Not in bucket, trying static at:', path.join(STATIC_DIR, `${name}.js`));
+		// Not in bucket, fall through
 	}
 
+	// Fall back to static
 	const staticPath = path.join(STATIC_DIR, `${name}.js`);
-	//console.log('Static path exists:', fs.existsSync(staticPath));
-
 	if (fs.existsSync(staticPath)) {
 		const code = fs.readFileSync(staticPath, 'utf-8');
 		return new Response(code, {
