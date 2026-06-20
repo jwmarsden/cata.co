@@ -6,6 +6,7 @@
 		page: ['Page','Pages'],
 		project: ['Project','Projects'],
 		media: ['Media','Media'],
+		article: ['Article','Articles'],
 	};
 
 	const grouped = $derived(

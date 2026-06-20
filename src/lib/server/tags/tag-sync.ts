@@ -110,3 +110,47 @@ export async function syncMediaTagsToRedis(): Promise<void> {
 
 	console.log(`Synced media tags to Redis`);
 }
+
+export async function syncArticleTagsToRedis(): Promise<void> {
+	console.log('Syncing article tags to Redis...');
+
+    const articlesDir = path.resolve('src/articles');
+    const files = getFilesRecursively(articlesDir, '.md');
+    let tags: { [key: string]: number } = {};
+
+
+    const articles = files.map(filename => {
+            const raw = fs.readFileSync(path.join(articlesDir, filename), 'utf-8');
+            
+            const { data } = matter(raw);
+            return {
+                slug: filename.replace('.md', '').replace(/\\/g, '/'),
+                title: data.title ?? 'Untitled',
+                date: data.date ? new Date(data.date).toISOString() : null,
+                excerpt: data.excerpt ?? '',
+                tags: data.tags ?? [],
+                author: data.author ?? 'Unknown',
+            };
+        });
+
+    for (const article of articles) {
+
+        for (const tagHash of article.tags) {
+            var tag = await getTag(tagHash);
+            if (tag) {
+                if (!tag.instances.some(i => i.url === `/articles/${article.slug}`)) {
+                    tag.instances.push({ type: 'article', url: `/articles/${article.slug}`, description: article.excerpt });
+                    tag.occurrences++;
+                    await updateTag(tag);
+                }
+            } else {
+                tag = new Tag(tagHash);
+                tag.instances.push({ type: 'article', url: `/articles/${article.slug}`, description: article.excerpt });
+                tag.occurrences++;
+                tag = await createTag(tag);
+            }
+        }
+    }
+
+	console.log(`Synced article tags to Redis`);
+}

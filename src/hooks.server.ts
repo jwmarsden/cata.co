@@ -2,7 +2,7 @@ import { sequence } from '@sveltejs/kit/hooks';
 import { handle as authHandle } from './auth';
 import { redirect } from '@sveltejs/kit';
 import type { Handle, ServerInit } from '@sveltejs/kit';
-import { truncateTags, syncPostTagsToRedis, syncMediaTagsToRedis } from '$lib/server/tags/tag-sync';
+import { truncateTags, syncPostTagsToRedis, syncMediaTagsToRedis, syncArticleTagsToRedis } from '$lib/server/tags/tag-sync';
 import { index_articles } from '$lib/server/articles/article_index';
 
 export const init: ServerInit = async () => {
@@ -13,6 +13,7 @@ export const init: ServerInit = async () => {
 	await syncPostTagsToRedis().catch(err => {
 		console.error('Error indexing posts:', err);
 	});
+	
 
 	index_articles().then(() => {
 		console.log('Finished indexing articles');
@@ -23,6 +24,10 @@ export const init: ServerInit = async () => {
 
 	await syncMediaTagsToRedis().catch(err => {
 		console.error('Error syncing media tags:', err);
+	});
+
+	await syncArticleTagsToRedis().catch(err => {
+		console.error('Error syncing article tags:', err);
 	});
 };
 
