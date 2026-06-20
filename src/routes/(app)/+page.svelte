@@ -37,8 +37,9 @@
 			<div class="card bg-mist border border-mist-dark border-l-4 border-l-amber">
 				<div class="card-body">
 					<div class="badge bg-amber text-ocean border-none mb-2">Featured Article</div>
-					<h3 class="card-title text-ocean">Backface Culling</h3>
+					<h3 class="card-title text-ocean">Back-face Culling</h3>
 					<p class="text-text-muted">Learn about the process of back-face culling in computer graphics.</p>
+					<img src="/images/article-back-face-cull.png" alt="Back-face Cull" width="200" class="border-l-amber"/>
 					<div class="card-actions mt-2">
 						<a href="articles/graphics/backface-culling">Read more →</a>
 					</div>

@@ -8,8 +8,8 @@ import {
 } from '/api/scenes/lib/scene-utils.js';
 
 export const meta = {
-	title: 'Working Cull Scene',
-	description: 'An interactive mesh demonstrating back-face culling',
+	title: 'Base Geometry',
+	description: 'An interactive mesh demonstrating models',
 	height: 500,
 };
 
@@ -106,57 +106,6 @@ export function init(container) {
 	wireLabel.appendChild(document.createTextNode('Wireframe'));
 	ui.appendChild(wireLabel);
 
-	// Show Cull checkbox
-	const showCullLabel = document.createElement('label');
-	showCullLabel.style.cssText = labelCSS;
-	const showCullCheckbox = document.createElement('input');
-	showCullCheckbox.type = 'checkbox';
-	showCullCheckbox.checked = true;
-	showCullCheckbox.style.cursor = 'pointer';
-	showCullCheckbox.addEventListener('change', () => {
-		showCullFaces = showCullCheckbox.checked;
-		updateCullVisibility();
-	});
-	showCullLabel.appendChild(showCullCheckbox);
-	showCullLabel.appendChild(document.createTextNode('Back-faces'));
-	ui.appendChild(showCullLabel);
-	
-	// Top view button
-	topViewBtn = makeButton('👁 View', () => toggleTopView());
-	ui.appendChild(topViewBtn);
-
-	// Rotation slider
-	const rotateLabel = document.createElement('label');
-	rotateLabel.style.cssText = labelCSS + 'flex-direction: column; align-items: stretch; gap: 4px;';
-
-	const rotateLabelText = document.createElement('span');
-	rotateLabelText.textContent = 'Rotate';
-	rotateLabelText.style.cssText = 'font-size: 12px;';
-
-	const rotateSlider = document.createElement('input');
-	rotateSlider.type = 'range';
-	rotateSlider.min = '-180';
-	rotateSlider.max = '180';
-	rotateSlider.value = '45'; // matches your current Math.PI/4 default
-	rotateSlider.step = '1';
-	rotateSlider.style.cssText = `
-		width: 140px;
-		cursor: pointer;
-		accent-color: #F2A65A;
-	`;
-
-	rotateSlider.addEventListener('input', () => {
-		const degrees = parseFloat(rotateSlider.value);
-		if (globalMeshGroup) {
-			//globalMeshGroup.rotation.z = degrees * (Math.PI / 180);
-			meshChange(globalMeshGroup, degrees)
-		}
-	});
-
-	//rotateLabel.appendChild(rotateLabelText);
-	//rotateLabel.appendChild(rotateSlider);
-	//ui.appendChild(rotateLabel);
-
 	const wrapper = document.createElement('div');
 	wrapper.style.cssText = 'position: relative; width: 100%; height: 100%;';
 	wrapper.appendChild(ui);
@@ -175,12 +124,8 @@ export function init(container) {
 		cullMeshGroup.name = 'CullMeshGroup';
 		
 		const view_v = [ 0, -1, 0 ];
-
-		innerMesh.rotation.z = parseFloat(rotateSlider.value) * (Math.PI / 180);
 		
-		for (const mesh of doBackfaceCull(view_v, innerMesh)) {
-			cullMeshGroup.add(mesh);
-		}
+        cullMeshGroup.add(innerMesh);
 
 		const sizeBox = new THREE_ref.Box3().setFromObject(cullMeshGroup);
 		const size = sizeBox.getSize(new THREE_ref.Vector3());
@@ -192,169 +137,9 @@ export function init(container) {
 		const positionBox = new THREE_ref.Box3().setFromObject(cullMeshGroup);
 		cullMeshGroup.position.y = -positionBox.min.y;
 		cullMeshGroup.rotation.y = Math.PI / 4;
-		//cullMeshGroup.rotation.z = parseFloat(rotateSlider.value) * (Math.PI / 180);
 
 		globalMeshGroup = cullMeshGroup;
 		scene.add(cullMeshGroup);
-	}
-
-	function extractGeometry(mesh) {
-		const position = mesh.geometry.attributes.position;
-		const index = mesh.geometry.index;
-		const vSet = [];
-		for (let i = 0; i < position.count; i++) {
-			vSet.push([position.getX(i), position.getY(i), position.getZ(i)]);
-		}
-		const fSet = [];
-		if (index) {
-			for (let i = 0; i < index.count; i += 3) {
-				fSet.push([index.getX(i), index.getX(i + 1), index.getX(i + 2)]);
-			}
-		} else {
-			for (let i = 0; i < position.count; i += 3) {
-				fSet.push([i, i + 1, i + 2]);
-			}
-		}
-		return { vSet, fSet };
-	}
-
-	// Subtracts vector b from vector a, component by component.
-	// Expects both a and b to be 3‑element arrays: [x, y, z].
-	// Returns a new 3‑element array representing the difference.
-	function subtract(a, b) {
-		return [
-			a[0] - b[0], // x component
-			a[1] - b[1], // y component
-			a[2] - b[2]  // z component
-		];
-	}
-
-	// Returns a new vector pointing in the same direction but with unit length.
-	// If the vector has zero length, returns [0, 0, 0] to avoid division by zero.
-	function normalize(v) {
-		// Compute the Euclidean length (magnitude) of the vector
-		const len = Math.sqrt(
-			Math.pow(v[0], 2) + 
-			Math.pow(v[1], 2) + 
-			Math.pow(v[2], 2)
-		);
-
-		// If length is non-zero, divide each component by the length
-		return len > 0
-			? [v[0] / len, v[1] / len, v[2] / len]
-			: [0, 0, 0]; // Zero vector stays zero
-	}
-
-	// Computes the cross product of two vectors a and b.
-	// The result is a vector perpendicular to both a and b 
-	// following the right‑hand rule.
-	function crossProduct(a, b) {
-		return [
-			a[1] * b[2] - a[2] * b[1], // x component
-			a[2] * b[0] - a[0] * b[2], // y component
-			a[0] * b[1] - a[1] * b[0], // z component
-		];
-	}
-
-	// Computes the dot product of two vectors a and b.
-	function dotProduct(a, b) {
-		return (a[0] * b[0]) +
-			(a[1] * b[1]) +
-			(a[2] * b[2]);
-	}
-
-	// Performs backface culling on a mesh using a view direction vector `v_view`.
-	// Faces whose normals point toward the viewer are marked visible;
-	function doBackfaceCull(v_view, originalMesh) {
-
-		// Extract vertex set (vSet) and face index set (fSet)
-		const { vSet, fSet } = extractGeometry(originalMesh);
-
-		const visibleFaces = []; // indices of faces facing the viewer
-		const culledFaces  = []; // indices of faces facing away
-
-		for (const f of fSet) {
-
-			// Retrieve the 3 vertices of the face
-			const { v1, v2, v3 } = {
-				v1: vSet[f[0]],
-				v2: vSet[f[1]],
-				v3: vSet[f[2]]
-			};
-
-			// Compute edge vectors of the face
-			const e1 = subtract(v2, v1);
-			const e2 = subtract(v3, v1);
-
-			// Compute face normal via cross product
-			const e1xe2 = crossProduct(e1, e2);
-
-			// Normalize the normal vector
-			const e1xe2Normal = normalize(e1xe2);
-
-			// Dot product with view vector determines orientation
-			const z = dotProduct(e1xe2Normal, v_view);
-
-			// If the face normal points toward the viewer, keep it
-			if (z <= 0) {
-				visibleFaces.push(...f);
-			} else {
-				culledFaces.push(...f);
-			}
-		}
-
-		// Build two meshes: visible faces and culled faces
-		return buildCullMeshes(originalMesh, vSet, visibleFaces, culledFaces);
-	}
-
-	function buildCullMeshes(originalMesh, vertices, visibleFaces, culledFaces) {
-		// Flatten vertex array into a Float32Array for BufferGeometry
-		const positions = new Float32Array(vertices.length * 3);
-		for (let i = 0; i < vertices.length; i++) {
-			positions[i * 3]     = vertices[i][0];
-			positions[i * 3 + 1] = vertices[i][1];
-			positions[i * 3 + 2] = vertices[i][2];
-		}
-
-		// Visible faces mesh — uses original-style material
-		const visibleGeom = new THREE_ref.BufferGeometry();
-		visibleGeom.setAttribute('position', new THREE_ref.BufferAttribute(positions, 3));
-		visibleGeom.setIndex(visibleFaces);
-		visibleGeom.computeVertexNormals();
-
-		const visibleMaterial = new THREE_ref.MeshPhongMaterial({
-			color: 0xF2A65A,
-			shininess: 80,
-			specular: 0x444444,
-			side: THREE_ref.FrontSide,
-		});
-
-		const visibleMesh = new THREE_ref.Mesh(visibleGeom, visibleMaterial);
-		visibleMesh.name = originalMesh.name + 'Visible';
-
-		// Culled faces mesh — red and transparent
-		const culledGeom = new THREE_ref.BufferGeometry();
-		culledGeom.setAttribute('position', new THREE_ref.BufferAttribute(positions, 3));
-		culledGeom.setIndex(culledFaces);
-		culledGeom.computeVertexNormals();
-
-		const culledMaterial = new THREE_ref.MeshBasicMaterial({
-			color: 0xff3333,
-			transparent: true,
-			opacity: 0.35,
-			side: THREE_ref.DoubleSide,
-			depthWrite: false,
-		});
-
-		const culledMesh = new THREE_ref.Mesh(culledGeom, culledMaterial);
-		culledMesh.name = originalMesh.name + 'Culled';
-		culledMesh.visible = showCullFaces;
-
-		// Wireframe overlays for both, matching existing pattern
-		visibleMesh.add(createWireframeForMesh(visibleMesh));
-		culledMesh.add(createWireframeForMesh(culledMesh));
-
-		return [visibleMesh, culledMesh];
 	}
 
 
@@ -367,25 +152,6 @@ export function init(container) {
 		camera.lookAt(0, 1.5, 0);
 	}
 
-	function toggleTopView() {
-		if (!cameraAnim || cameraAnim.isAnimating()) return;
-		if (!isTopView) {
-			cameraAnim.animateTo({ theta: spherical.theta, phi: 0.01, radius: spherical.radius });
-			isTopView = true;
-			topViewBtn.textContent = '↩ Restore';
-			// Hide arrow and label
-			if (arrowHelper) arrowHelper.visible = false;
-			if (vectorLabelSprite) vectorLabelSprite.visible = false;
-		} else {
-			cameraAnim.animateTo({ theta: Math.PI / 4, phi: Math.PI / 3, radius: 8 });
-			isTopView = false;
-			topViewBtn.textContent = '👁 View';
-			// Restore arrow and label
-			if (arrowHelper) arrowHelper.visible = true;
-			if (vectorLabelSprite) vectorLabelSprite.visible = true;
-		}
-	}
-
 	function updateWireframeVisibility() {
 		if (!globalMeshGroup) return;
 		const wfMeshes = [];
@@ -393,15 +159,6 @@ export function init(container) {
 			if (child.isMesh && child.material?.wireframe) wfMeshes.push(child);
 		});
 		for (const m of wfMeshes) m.visible = showWireframe;
-	}
-
-	function updateCullVisibility() {
-		if (!globalMeshGroup) return;
-		globalMeshGroup.traverse(child => {
-			if (child.isMesh && child.name.endsWith('Culled')) {
-				child.visible = showCullFaces;
-			}
-		});
 	}
 	
 	function showError(msg) {
@@ -579,6 +336,7 @@ export function init(container) {
 		// Axes with labels from library
 		addAxesWithLabels(THREE, scene, 2);
 
+        /*
 		// Arrow — v_view above geometry pointing down
 		const arrowOrigin = new THREE.Vector3(0, 3.5, 0);
 		const arrowDir = new THREE.Vector3(0, -1, 0);
@@ -593,7 +351,7 @@ export function init(container) {
 			vec: true,
 			position: new THREE.Vector3(0, 3.5, 0),
 		});
-
+        */
 		globalMeshGroup = await loadGeometry('teapot');
 		await meshChange(globalMeshGroup);
 

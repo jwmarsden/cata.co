@@ -1,5 +1,5 @@
 ---
-title: Backface Culling - 🚧 Work in progress
+title: Back-face Culling
 date: 2026-06-05
 updated:
 excerpt: Backface culling is a fundamental geometric operation that discards polygons that are facing away from a view vector.
@@ -12,7 +12,7 @@ tags: [explainer, 3d, 2d, graphics, mathematics, linear-algebra, geometry, rende
 [Back-face culling](https://en.wikipedia.org/wiki/Back-face_culling) is the fundamental operation in which faces of a [geometric mesh](https://en.wikipedia.org/wiki/Types_of_mesh) are discarded if they are not visible from a viewing direction. The operation is used during some methods of rendering as an optimisation that simplifies the number of polygons that are considered frame-by-frame for drawing as historically each face was in the program memory and had a relatively high cost for render[^1]. Back-face culling in the application was a good rendering optimisation[^2]. However, more modern [GPU](https://en.wikipedia.org/wiki/Graphics_processing_unit) pipelines tend to hold the whole mesh within [buffers in video memory](https://vulkan.lunarg.com/doc/view/1.4.309.0/linux/tutorial/html/13-init_vertex_buffer.html), and the shader pipeline is very efficient at massively parallelising the fragment shading calculations and shifting all of this thinking to the graphics pipeline. 
 
 [^1]: See [Retained Mode](https://en.wikipedia.org/wiki/Retained_mode) rendering examples.
-[^2]: https://www.gamedeveloper.com/programming/a-compact-method-for-backface-culling.
+[^2]: See [A Compact Method for Backface Culling](https://www.gamedeveloper.com/programming/a-compact-method-for-backface-culling) (O.Levi 1999).
 
 Nevertheless, like all mathematics, the theory is relevant to understand for a range of problems. Examples include when programming [vertex and fragment shaders](https://en.wikipedia.org/wiki/Shader) and when considering if an object occurs within a [view frustum](https://en.wikipedia.org/wiki/Viewing_frustum).  
 
@@ -22,7 +22,7 @@ This article will focus on taking a full mesh of the geometry (made up of vertic
 
 ## Definition & Method
 
-The following section provides a formal defintion of our back-face culling process.
+The following section provides a formal definition of our back-face culling process.
 
 ### Mesh Definition
 
@@ -31,7 +31,7 @@ We have a mesh $M = (V, F)$ comprising:
 * $V$, a set of vertices where each vertex $v = (v_{x}, v_{y}, v_{z})$ is an ordered triplet of coordinates with $v_{x}, v_{y}, v_{z} \in \mathbb{R}$
 * $F$, a set of faces where each face $f = (v_{n},v_{o},v_{p})$ with $v_{n},v_{o},v_{p} \in V$ using a clockwise orientation for the representation of front-facing polygons
 
-### View Vector Defintion
+### View Vector Definition
 
 The convention we will follow is the right-handed rule (with the $\text{y-axis}$ up and $\text{z-axis}$ into the screen). This gives us a top down view vector: $$\vec{v}_{view} = \begin{bmatrix} 0, & -1, & 0 \end{bmatrix}$$
 
@@ -43,7 +43,7 @@ The cross product finds the perpendicular vector $\vec{a} \times \vec{b}$ to vec
 
 $${\vec{a} \times \vec{b} =}{\begin{bmatrix} a_2b_3 - a_3b_2 \\ a_3b_1 - a_1b_3 \\ a_1b_2 - a_2b_1 \end{bmatrix}}$$
 
-The cross product is utlised to find the face normals.
+The cross product is utlised to find the face normal.
 
 ### Dot Product
 
@@ -86,7 +86,7 @@ The following section is a backface culling implementation using [three.js](http
 
 ### Input Geometry
 
-The input geometry being used for this implementation are the [Utah Teapot](https://en.wikipedia.org/wiki/Utah_teapot)[^utah-teapot] and the [Stanford Bunny](https://en.wikipedia.org/wiki/Stanford_bunny)[^stanford-bunny]. The following provides an interactive view of both models. 
+The input geometry being used for this implementation are the [Utah Teapot](https://en.wikipedia.org/wiki/Utah_teapot)[^utah-teapot], the [Stanford Bunny](https://en.wikipedia.org/wiki/Stanford_bunny)[^stanford-bunny] and the [XYZ RGB Asian Dragon from the Stanford Repository](https://graphics.stanford.edu/data/3Dscanrep/)[^XYZ-RGB-dragon]. The following scene provides an interactive view of the models. 
 
 ![[scene:base-geometry]]
 
@@ -94,11 +94,15 @@ The input geometry being used for this implementation are the [Utah Teapot](http
 
 [^stanford-bunny]:The Stanford Bunny is being loaded in the browser from [Stanford](https://graphics.stanford.edu/~mdfisher/Data/Meshes/bunny.obj)
 
+[^XYZ-RGB-dragon]:The Standford Dragon is being loaded in the browser from [GitHub](https://github.com/alecjacobson/common-3d-test-models/blob/master/data/xyzrgb_dragon.obj)
+
 ### Cull Operation Implementation
 
 The following section provides a Javascript implementation of the operations required to cull the back faces of a mesh.
 
 #### Vector Subtraction
+
+The following code provides an implementation for vector subtraction. 
 
 ```javascript
 // Subtracts vector b from vector a, component by component.
@@ -113,7 +117,9 @@ function subtract(a, b) {
 }
 ```
 
-#### Vector Normalization
+#### Vector Normalisation
+
+The following code provides an implementation for vector normalisation. As an Australian, I have decided to write this article using my native spelling but I continue to code using American spelling. 
 
 ```javascript
 // Returns a new vector pointing in the same direction but with unit length.
@@ -135,6 +141,8 @@ function normalize(v) {
 
 #### Vector Cross Product
 
+The following code provides an implementation for [vector cross product](#cross-product). 
+
 ```javascript
 // Computes the cross product of two vectors a and b.
 // The result is a vector perpendicular to both a and b 
@@ -148,7 +156,9 @@ function crossProduct(a, b) {
 }
 ```
 
-#### Vector Cross Product
+#### Vector Dot Product
+
+The following code provides an implementation for [vector dot product](#dot-product). 
 
 ```javascript
 // Computes the dot product of two vectors a and b.
@@ -160,6 +170,8 @@ function dotProduct(a, b) {
 ```
 
 #### Mesh Back-face Cull Based on View Vector
+
+The following code provides an implementation for the [back-face cull algorithm](#algorithm-formalisation). 
 
 ```javascript
 // Performs backface culling on a mesh using a view direction vector `v_view`.
@@ -199,9 +211,16 @@ function doBackfaceCull(v_view, originalMesh) {
 
 ### Cull Operation Result
 
-![[scene:working-cull]]{Cull Processing}
+The following scene provides a working implemention of the back-face cull on the input meshes. 
+
+The faces that have been culled can be toggled with the checkbox and the scene can be viewed from the view vector showing the the remaining faces are viewable. 
+
+![[scene:cull-geometry]]{Cull Processing}
+
+This version does not look for any faces that are not viewable due to being obstructed by a different face on the model. This is behaviour is viewable when looking at the faces on the top of the Stanford Bunny's feet. 
 
 ## Conclusion
 
-> 🚧 **Work in progress** — this section is still being written. 
-> The ideas are there, the words are coming.
+This article on back-face culling presents the motivation for back-face culling, the theory related to achieve it and it provides an implementation in javascript using only primitives and arrays. 
+
+With this being my first article I want to stop extending it and get it finished. The next article will build upon this contribution in the journey of creating a two-dimensional silhouette corresponding to the three-dimensional geometry as it would be seen from above.
