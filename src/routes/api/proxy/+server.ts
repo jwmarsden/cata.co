@@ -4,6 +4,7 @@ const ALLOWED_HOSTS = [
 	'casual-effects.com',
 	'graphics.stanford.edu',
 	'raw.githubusercontent.com',
+	'github.com',
 ];
 
 export async function GET({ url }) {

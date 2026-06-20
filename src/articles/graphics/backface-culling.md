@@ -75,7 +75,7 @@ $
 \color{#1b3a4bcc} \quad\quad\normalsize\text{Let}\:\hat{n}_{f} = \frac{\vec{n}_{f}}{\Vert{}\vec{n}_{f}\Vert{}}\\
 \color{#f2a65a} \quad\quad\small{\text{\#\:check\:\:face}\text{\:visiblilty\:from\:}}\vec{v}_{view}\\
 \color{#1b3a4bcc} \quad\quad\normalsize\text{Let}\:z = \vec{v}_{view} \cdot \hat{n}_{f}\\
-\color{#1b3a4bcc} \quad\quad\normalsize\text{If}\:z > 0 \:\text{then}\: f \:\text{is visible else discard}\: f\\
+\color{#1b3a4bcc} \quad\quad\normalsize\text{If}\:z < 0 \:\text{then}\: f \:\text{is visible else discard}\: f\\
 $
 
 The processing complexity is $O(n)$ as it is a linear function $\vert{}n\vert{}=\vert{}F\vert{}$.
@@ -88,7 +88,7 @@ The following section is a backface culling implementation using [three.js](http
 
 The input geometry being used for this implementation are the [Utah Teapot](https://en.wikipedia.org/wiki/Utah_teapot)[^utah-teapot] and the [Stanford Bunny](https://en.wikipedia.org/wiki/Stanford_bunny)[^stanford-bunny]. The following provides an interactive view of both models. 
 
-![[scene:base-geometry]]{Base Teapot and Bunny Mesh Objects}
+![[scene:base-geometry]]
 
 [^utah-teapot]:The Utah Teapot rendered here is available in [three.js](https://threejs.org/). The documents for it are [here](https://threejs.org/docs/#TeapotGeometry). 
 
@@ -96,13 +96,110 @@ The input geometry being used for this implementation are the [Utah Teapot](http
 
 ### Cull Operation Implementation
 
-> 🚧 **Work in progress** — this section is still being written. 
-> The ideas are there, the words are coming.
+The following section provides a Javascript implementation of the operations required to cull the back faces of a mesh.
+
+#### Vector Subtraction
+
+```javascript
+// Subtracts vector b from vector a, component by component.
+// Expects both a and b to be 3‑element arrays: [x, y, z].
+// Returns a new 3‑element array representing the difference.
+function subtract(a, b) {
+    return [
+        a[0] - b[0], // x component
+        a[1] - b[1], // y component
+        a[2] - b[2]  // z component
+    ];
+}
+```
+
+#### Vector Normalization
+
+```javascript
+// Returns a new vector pointing in the same direction but with unit length.
+// If the vector has zero length, returns [0, 0, 0] to avoid division by zero.
+function normalize(v) {
+    // Compute the Euclidean length (magnitude) of the vector
+    const len = Math.sqrt(
+        Math.pow(v[0], 2) + 
+        Math.pow(v[1], 2) + 
+        Math.pow(v[2], 2)
+    );
+
+    // If length is non-zero, divide each component by the length
+    return len > 0
+        ? [v[0] / len, v[1] / len, v[2] / len]
+        : [0, 0, 0]; // Zero vector stays zero
+}
+```
+
+#### Vector Cross Product
+
+```javascript
+// Computes the cross product of two vectors a and b.
+// The result is a vector perpendicular to both a and b 
+// following the right‑hand rule.
+function crossProduct(a, b) {
+    return [
+        a[1] * b[2] - a[2] * b[1], // x component
+        a[2] * b[0] - a[0] * b[2], // y component
+        a[0] * b[1] - a[1] * b[0], // z component
+    ];
+}
+```
+
+#### Vector Cross Product
+
+```javascript
+// Computes the dot product of two vectors a and b.
+function dotProduct(a, b) {
+    return (a[0] * b[0]) +
+           (a[1] * b[1]) +
+           (a[2] * b[2]);
+}
+```
+
+#### Mesh Back-face Cull Based on View Vector
+
+```javascript
+// Performs backface culling on a mesh using a view direction vector `v_view`.
+// Faces whose normals point toward the viewer are marked visible;
+function doBackfaceCull(v_view, originalMesh) {
+    // Extract vertex set (vSet) and face index set (fSet)
+    const { vSet, fSet } = extractGeometry(originalMesh);
+    const visibleFaces = []; // indices of faces facing the viewer
+    const culledFaces  = []; // indices of faces facing away
+    for (const f of fSet) {
+        // Retrieve the 3 vertices of the face
+        const { v1, v2, v3 } = {
+            v1: vSet[f[0]],
+            v2: vSet[f[1]],
+            v3: vSet[f[2]]
+        };
+        // Compute edge vectors of the face
+        const e1 = subtract(v2, v1);
+        const e2 = subtract(v3, v1);
+        // Compute face normal via cross product
+        const e1xe2 = crossProduct(e1, e2);
+        // Normalize the normal vector
+        const e1xe2Normal = normalize(e1xe2);
+        // Dot product with view vector determines orientation
+        const z = dotProduct(e1xe2Normal, v_view);
+        // If the face normal points toward the viewer, keep it
+        if (z >= 0) {
+            visibleFaces.push(...f);
+        } else {
+            culledFaces.push(...f);
+        }
+    }
+    // Build two meshes: visible faces and culled faces
+    return buildCullMeshes(originalMesh, vSet, visibleFaces, culledFaces);
+}
+```
 
 ### Cull Operation Result
 
-> 🚧 **Work in progress** — this section is still being written. 
-> The ideas are there, the words are coming.
+![[scene:working-cull]]{Cull Processing}
 
 ## Conclusion
 
