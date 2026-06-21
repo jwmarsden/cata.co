@@ -50,9 +50,9 @@
 				<div class="card-body">
 					<div class="badge bg-ocean text-mist border-none mb-2">Latest Post</div>
 					<h3 class="card-title text-ocean">Posting</h3>
-					<p class="text-text-muted">Catch up on June Planning.</p>
+					<p class="text-text-muted">A brief June Update. Still making slow progress and enjoying it.</p>
 					<div class="card-actions mt-2">
-						<a href="/posts/202606/202606-plan">Read more →</a>
+						<a href="/posts/202606/june-update">Read more →</a>
 					</div>
 				</div>
 			</div>
