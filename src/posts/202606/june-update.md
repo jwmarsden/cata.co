@@ -14,7 +14,7 @@ For something was in the distance, and, it continued to roam.  \
 "Is it more appropriate to sit? what about backwards? or am I enjoying having a little spin?". 
 If the wisp had shoulders, it would shrug them but unfortunately all it could do is take stock, reflect and begin.
 
-Cruelly not long after, everything was obliterated, like it never happened.
+Cruelly not long after, everything was obliterated... lost to time.
 
 Motivation remains an enigma, from whence does it blaze, will it continue? can I bottle it? or will it just slowly wane? 
 
