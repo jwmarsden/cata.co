@@ -12,7 +12,7 @@
 	function fontSize(occurrences: number): string {
 		if (max === min) return '1rem';
 		const scale = (occurrences - min) / (max - min);
-		const size = 0.8 + scale * 0.6;
+		const size = 0.6 + scale * 0.4;
 		return `${size.toFixed(2)}rem`;
 	}
 

@@ -174,7 +174,7 @@ function dotProduct(a, b) {
 The following code provides an implementation for the [back-face cull algorithm](#algorithm-formalisation). 
 
 ```javascript
-// Performs backface culling on a mesh using a view direction vector `v_view`.
+// Performs back-face culling on a mesh using a view direction vector `v_view`.
 // Faces whose normals point toward the viewer are marked visible;
 function doBackfaceCull(v_view, originalMesh) {
     // Extract vertex set (vSet) and face index set (fSet)
@@ -221,6 +221,6 @@ The faces that have been culled can be toggled with the checkbox and the scene c
 
 This article on back-face culling presents the motivation for back-face culling, the theory related to achieve it and it provides an implementation in javascript using only primitives and arrays. 
 
-This version does not look for any faces that are not viewable due to being obstructed by a different face on the model. This is behaviour is observable in the Utah Teapot handle and when looking at the faces on the top of the Stanford Bunny's feet that are not back-facing nor are they visible from $\vec{v}_{view}$. Often this is not a large performance problem for a single model but this behaviour does not scale to complex scenes. This will be considered in [Occlusion Culling](/articles/occlusion-culling).
+This version does not look for any faces that are not viewable due to being obstructed by a different face on the model. This is behaviour is observable in the Utah Teapot handle and when looking at the faces on the top of the Stanford Bunny's feet that are not back-facing nor are they visible from $\vec{v}_{view}$. Often this is not a large performance problem for a single model but this behaviour does not scale to complex scenes. This will be considered in [Occlusion Culling](/articles/graphics/occlusion-culling).
 
-With this being my first article I want to stop extending it and get it finished. The [Occlusion Culling](/articles/occlusion-culling) article will build upon this contribution and be a valid step on the journey of creating a two-dimensional silhouette corresponding to the three-dimensional geometry as it would be seen from above.
+With this being my first article I want to stop extending it and get it finished. The [Occlusion Culling](/articles/graphics/occlusion-culling) article will build upon this contribution and be a valid step on the journey of creating a two-dimensional silhouette corresponding to the three-dimensional geometry as it would be seen from above.

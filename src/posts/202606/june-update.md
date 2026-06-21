@@ -20,7 +20,7 @@ Motivation remains an enigma, from whence does it blaze, will it continue? can I
 
 ## First Article
 
-The [first article on back-face culling](/articls/backface-culling) is completed. 
+The [first article on back-face culling](/articles/graphics/backface-culling) is completed. 
 
 ![Back-face Culling example on Stanford Bunny](/images/article-back-face-cull.png)
 
@@ -39,7 +39,7 @@ While the article might seem simple, I have had to,
     - Figure out how to import libraries and display them in a functional window within the article.
     - Restructure the SvelteKit deployment to serve the scenes in their own basic layout so they can be included on a page nicely. 
     - Admin sections to edit and view the scene while developing. 
-1. Authour and edit the [back-face culling article](/articls/backface-culling). This includes;
+1. Authour and edit the [back-face culling article](/articles/graphics/backface-culling). This includes;
     - The ramble at the start of the article.
     - Document the formalisation section. 
     - Implement the view and culling scenes using my scene framework which included numerous refactors learning [three.js](https://threejs.org/) and shaping the examples how I want them. 
