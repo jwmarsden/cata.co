@@ -110,4 +110,12 @@
 	.prose :global(a[href^="/"]:hover) {
 		color: var(--color-amber);
 	}
+
+	.prose :global(img) {
+		border-radius: 1em;
+		display: block;
+		margin: 1.5rem auto;
+		max-width: 100%;
+		height: auto;
+	}
 </style>

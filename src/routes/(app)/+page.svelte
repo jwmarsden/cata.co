@@ -39,7 +39,7 @@
 					<div class="badge bg-amber text-ocean border-none mb-2">Featured Article</div>
 					<h3 class="card-title text-ocean">Back-face Culling</h3>
 					<p class="text-text-muted">Learn about the process of back-face culling in computer graphics.</p>
-					<img src="/images/article-back-face-cull.png" alt="Back-face Cull" width="200" class="border-l-amber"/>
+					<img src="/images/article-back-face-cull.png" alt="Back-face Cull" width="250" class="feature border-l-amber"/>
 					<div class="card-actions mt-2">
 						<a href="articles/graphics/backface-culling">Read more →</a>
 					</div>
@@ -64,3 +64,13 @@
 </section>
 
 <hr class="h-px w-188 mx-auto my-8 bg-mist-dark border-0">
+
+<style>
+	.feature {
+		border-radius: 1em;
+		display: block;
+		margin: 1.5rem auto;
+		max-width: 100%;
+		height: auto;
+	}
+</style>
