@@ -18,7 +18,7 @@ Nevertheless, like all mathematics, the theory is relevant to understand for a r
 
 The wider use case motivating this article is where three-dimensional real-world geometry is being pre-processed in a process to find a two-dimensional spatial representation for usage within a [Geographical Information System (GIS)](https://www.esri.com/en-us/what-is-gis/). The most common spatial representation is looking directly down with an orthogonal view onto a flat plane of spatial shapes. In reality, things are more complex with a modern map (consider the buildings that are available in the built-up areas on a [lot of maps](https://www.bing.com/maps/?cp=-34.922501%7E138.593504&lvl=17.5&style=3d&eh=34.63)) but this article will follow the simpler paradigm. The objective is to view our mesh from a view vector looking directly downwards. Essentially we are creating top-down two-dimensional silhouette corresponding to the three-dimensional geometry as it would be seen from above. 
 
-This article will focus on taking a full mesh of the geometry (made up of vertices and faces) alongside a vector for the view direction as inputs and explain in detail the step to implement a process to discard any back-facing polgyons. 
+This article will focus on taking a full mesh of the geometry (made up of vertices and triangle faces) alongside a vector for the view direction as inputs and explain in detail the step to implement a process to discard any back-facing polygons.
 
 ## Definition & Method
 

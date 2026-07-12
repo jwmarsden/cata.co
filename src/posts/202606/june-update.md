@@ -1,7 +1,7 @@
 ---
 title: "June Update"
 date: 2026-06-21
-excerpt: "'An hour of planning can save you 10 hours of doing.' – Dale Carnegie." 
+excerpt: "'An hour of planning can save you 20 hours of doing.' – Kale Barnegie." 
 tags: ["ramble","articles","multibuild"]
 author: "jwm"
 ---
