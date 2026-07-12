@@ -128,4 +128,3 @@ $
 \color{#1b3a4bcc}\quad\quad\normalsize\text{If}\:\big((\vec{e}_1 \times \vec{c}_1) \cdot \hat{n}\big) \land \big((\vec{e}_2 \times \vec{c}_2) \cdot \hat{n}\big) \land \big((\vec{e}_3 \times \vec{c}_3) \cdot \hat{n}\big) = 1\text{\:then\:}d\text{\:intercepts\:}P\text{\:inside\:}f. 
 $
 
-

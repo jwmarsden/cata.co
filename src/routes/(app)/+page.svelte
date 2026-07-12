@@ -50,9 +50,9 @@
 				<div class="card-body">
 					<div class="badge bg-ocean text-mist border-none mb-2">Latest Post</div>
 					<h3 class="card-title text-ocean">Posting</h3>
-					<p class="text-text-muted">A brief June Update. Still making slow progress and enjoying it.</p>
+					<p class="text-text-muted">Slow moving on Cata.co for July, but I have been working on something interesting.</p>
 					<div class="card-actions mt-2">
-						<a href="/posts/202606/june-update">Read more →</a>
+						<a href="/posts/202607/be-you-human">Read more →</a>
 					</div>
 				</div>
 			</div>
