@@ -8,6 +8,7 @@
 	import { page } from '$app/state';
 	import { House, BookOpen, Info, Menu, FileText, KeySquare } from 'lucide-svelte';
 	import Analytics from '$lib/components/Analytics.svelte';
+	import LogoCube from '$lib/components/LogoCube.svelte';
 	let { children } = $props();
 </script>
 
@@ -20,7 +21,10 @@
 
 <div data-theme="cata" class="min-h-screen flex flex-col">
 <nav class="bg-ocean px-6 py-3 flex items-center justify-between">
-	<a href="/" class="logo header">CaTa</a>
+	<a href="/" class="logo header flex items-center gap-2">
+		<LogoCube />
+		CaTa
+	</a>
 	<ul class="flex items-center gap-6 list-none m-0 p-0">
 		<li>
 			<a href="/articles" class:active={page.url.pathname.startsWith('/articles')} class="flex items-center gap-1.5 text-sm">
