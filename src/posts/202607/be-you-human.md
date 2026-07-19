@@ -2,7 +2,7 @@
 title: "Be You Human?"
 date: 2026-07-10
 excerpt: "'AI doesn’t replace human intelligence; it redefines what we are capable of achieving.' – Gemini." 
-tags: ["ramble","update","road","digital-engineering","BIM","IFC","centerline","ai","claude"]
+tags: ["ramble","update","road","digital-engineering","bim","IFC","centerline","ai","claude"]
 author: "jwm"
 ---
 
@@ -42,14 +42,14 @@ It would be handy to have a machine that the design process could pass a model (
 
 Conceptually, its possible create this in a number of ways as long as the model is classified sufficiently. My initial thoughts are,
 
-#### **Consider the pavement wearing course geometry.**  
+#### Consider the pavement wearing course geometry
 The dataset for pavements are subject to individual digital engineering decisions varying from project to project. Its very likely this will be a large polygon representing the road surface.
 
 ![Example Pavement Surface Geometry|600](/images/posts/pavement-surface-geometry.png)
 
 A reasonable project would decide to provide some level of meta-information on subsections of the polygon representing carriageway's that can be aggregated. The road surface polygon could be processed to find the long sections and an optimisation approach could be taken to fit the appropriate sets of centreline's that best represent the road network.
 
-#### **Consider the line marking geometry**  
+#### Consider the line marking geometry  
 All jurisdictions in Australia derive or are adjacent to the the [Austroads](https://austroads.gov.au/) standards for line markings (for obvious reasons). A over simplification is that carriageway's have shoulders marked by solid lines and carriageway lane's are separated by broken lines.  
 
 ![Example Line Marking Geometry|600](/images/posts/line-marking-geometry.png)

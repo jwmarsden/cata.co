@@ -24,12 +24,12 @@
 				{data.date ? new Date(data.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'Unknown date'}
 			</span>
 			<span class="text-[#ccc]">·</span>
-			<span class="flex items-center gap-1">
+			<span class="flex items-center gap-1 flex-wrap">
 				<Tag size={14} />
 				{#each data.tags as tag}
 					<a
-						href="/tag/{tag}"
-						class="bg-mist text-ocean text-xs px-2 py-0.5 rounded-full no-underline transition-colors hover:bg-ocean hover:text-mist"
+						href="/tag/{tag.toLowerCase()}"
+						class="bg-mist text-ocean text-xs px-2 py-0.5 rounded-full no-underline lowercase transition-colors hover:bg-ocean hover:text-mist"
 					>
 						{tag}
 					</a>
@@ -43,7 +43,7 @@
 		</div>
 
 		<!-- Post content -->
-		<div class="prose prose-lg max-w-none">
+		<div class="prose prose-md max-w-none">
 			{@html data.html}
 		</div>
 

@@ -86,33 +86,33 @@ Intuitively thinking about this, the coefficients $a$, $b$, $c$ *are* the vector
 
 The view vector $\vec{v}_{view}$ is a ray that intersects with any plane that its not parallel with. The intersection point $v_q$ can be defined by,
 
-$$v_q = o_{origin} + d \vec{v}_{view}$$
+$$v_q = o_{origin} + t \vec{v}_{view}$$
 
-Intuitively thinking about this, we are looking for the vector between the origin and the plane in the view direction. Finding the scale factor $d$ of $\vec{v}_{view}$ to intercept $P$,
+Intuitively thinking about this, we are looking for the vector between the origin and the plane in the view direction. Finding the scale factor $t$ of $\vec{v}_{view}$ to intercept $P$,
 
 $
 \color{#1b3a4bcc}\quad\quad\normalsize\hat{n} \cdot (v-v_n) = 0\\
 \color{#f2a65a}\quad\quad\small\text{\#\:Substitute,\:}v_q\text{\:for\:}v \\
-\color{#1b3a4bcc}\quad\quad\normalsize\hat{n} \cdot \Big((o_{origin} + d \vec{v}_{view})-v_n\Big) = 0 \\
+\color{#1b3a4bcc}\quad\quad\normalsize\hat{n} \cdot \Big((o_{origin} + t \vec{v}_{view})-v_n\Big) = 0 \\
 \color{#f2a65a}\quad\quad\small\text{\#\:Rearrange,} \\
-\color{#1b3a4bcc}\quad\quad\normalsize\hat{n} \cdot \Big((o_{origin} - v_n) + (d \vec{v}_{view})\Big) = 0\\
+\color{#1b3a4bcc}\quad\quad\normalsize\hat{n} \cdot \Big((o_{origin} - v_n) + (t \vec{v}_{view})\Big) = 0\\
 \color{#f2a65a}\quad\quad\small\text{\#\:Distribute\:}\hat{n}\text{,\:} \\
-\color{#1b3a4bcc}\quad\quad\normalsize\hat{n} \cdot (o_{origin} - v_n) + \hat{n} \cdot (d \vec{v}_{view})= 0 \\
-\color{#f2a65a}\quad\quad\small\text{\#\:Rearrange, d is a scalar constant} \\
-\color{#1b3a4bcc}\quad\quad\normalsize\hat{n} \cdot (o_{origin} - v_n) + d  (\hat{n} \cdot \vec{v}_{view}) = 0 \\
+\color{#1b3a4bcc}\quad\quad\normalsize\hat{n} \cdot (o_{origin} - v_n) + \hat{n} \cdot (t \vec{v}_{view})= 0 \\
+\color{#f2a65a}\quad\quad\small\text{\#\:Rearrange, t is a scalar constant} \\
+\color{#1b3a4bcc}\quad\quad\normalsize\hat{n} \cdot (o_{origin} - v_n) + t  (\hat{n} \cdot \vec{v}_{view}) = 0 \\
 \color{#f2a65a}\quad\quad\small\text{\#\:Subtract,\:} \hat{n} \cdot (o_{origin} - v_n) \text{\:and distribute the negative.}\\
-\color{#1b3a4bcc}\quad\quad\normalsize d (\hat{n} \cdot  \vec{v}_{view}) = \hat{n} \cdot (v_n - o_{origin})\\
+\color{#1b3a4bcc}\quad\quad\normalsize t (\hat{n} \cdot  \vec{v}_{view}) = \hat{n} \cdot (v_n - o_{origin})\\
 \color{#f2a65a}\quad\quad\small\text{\#\:Divide,\:} (\hat{n} \cdot  \vec{v}_{view})\\
-\color{#1b3a4bcc}\quad\quad\normalsize d = \frac{\hat{n} \cdot (v_n - o_{origin})}{\hat{n} \cdot  \vec{v}_{view}}\\
+\color{#1b3a4bcc}\quad\quad\normalsize t = \frac{\hat{n} \cdot (v_n - o_{origin})}{\hat{n} \cdot  \vec{v}_{view}}\\
 $
 
-We can now find the coordinates of $v_q \in P$ using $d$. If $v_{view}$ is normalised then the distance from $o_{origin}$ to $v_q$ = $d$. Otherwise, $d = \Vert{}v_q - o_{origin}\Vert{}$.
+We can now find the coordinates of $v_q \in P$ using $t$. If $\vec{v}_{view}$ is normalised then the distance from $o_{origin}$ to $v_q$ is $t$. Otherwise, the distance from $o_{origin}$ to $v_q$ is $\Vert{}v_q - o_{origin}\Vert{} = t\Vert{}\vec{v}_{view}\Vert{}$.
 
-When $\hat{n} \cdot \vec{v}_{view} = 0$, the $\vec{v}_{view}$ is parallel to $P$ and they never intersect leaving $d$ undefined.
+When $\hat{n} \cdot \vec{v}_{view} = 0$, the $\vec{v}_{view}$ is parallel to $P$ and they never intersect leaving $t$ undefined.
 
 ### Mesh Face View Intercept Check
 
-Given we can calculate $d$, the vector from an origin $o_{origin}$ to the intercept point on plane $P$, we need to verify that it inside the face $f = (v_{n},v_{o},v_{p})$ on $P$ using an edge-side test.
+Given we can calculate $t$, the scale factor locating the intercept point $v_q$ on plane $P$, we need to verify that $v_q$ is inside the face $f = (v_{n},v_{o},v_{p})$ on $P$ using an edge-side test.
 
 
 $
@@ -120,11 +120,49 @@ $
 \color{#1b3a4bcc}\quad\quad\normalsize\text{Let}\:\vec{e}_1 = v_{o} - v_{n}\\
 \color{#1b3a4bcc}\quad\quad\normalsize\text{Let}\:\vec{e}_2 = v_{p} - v_{o}\\
 \color{#1b3a4bcc}\quad\quad\normalsize\text{Let}\:\vec{e}_3 = v_{n} - v_{p}\\
-\color{#f2a65a}\quad\quad\small\text{\#\:Find the 3 edges between\:} d and each of v_{n}, v_{o}, v_{p}\\
+\color{#f2a65a}\quad\quad\small\text{\#\:Find the 3 edges between\:} v_q \text{\:and each of\:} v_{n}, v_{o}, v_{p}\\
 \color{#1b3a4bcc}\quad\quad\normalsize\text{Let}\:\vec{c}_1 = v_{q} - v_{n}\\
 \color{#1b3a4bcc}\quad\quad\normalsize\text{Let}\:\vec{c}_2 = v_{q} - v_{o}\\
 \color{#1b3a4bcc}\quad\quad\normalsize\text{Let}\:\vec{c}_3 = v_{q} - v_{p}\\
 \\
-\color{#1b3a4bcc}\quad\quad\normalsize\text{If}\:\big((\vec{e}_1 \times \vec{c}_1) \cdot \hat{n}\big) \land \big((\vec{e}_2 \times \vec{c}_2) \cdot \hat{n}\big) \land \big((\vec{e}_3 \times \vec{c}_3) \cdot \hat{n}\big) = 1\text{\:then\:}d\text{\:intercepts\:}P\text{\:inside\:}f. 
+\color{#1b3a4bcc}\quad\quad\normalsize\text{If}\:\text{sign}\big((\vec{e}_1 \times \vec{c}_1) \cdot \hat{n}\big) = \text{sign}\big((\vec{e}_2 \times \vec{c}_2) \cdot \hat{n}\big) = \text{sign}\big((\vec{e}_3 \times \vec{c}_3) \cdot \hat{n}\big)\text{\:then\:}v_q\text{\:intercepts\:}P\text{\:inside\:}f. 
 $
 
+
+
+### Method one, raycast depth check from view point to find hidden faces 
+
+The first method is a greedy approach, it involves the raycast from the view point and checking every triangle against the others to determine obstruction and therefore order from the view point. The processing complexity of this method is $O(n^2)$ meaning it wont scale into detailed geometry and complex scenes. 
+
+Later, we will look at more sophisticated approaches that can scale. 
+
+### Raycast
+
+```javascript
+function rayTriangleIntersect(rayOrigin, rayDir, v0, v1, v2) {
+	const EPSILON = 1e-7;
+
+	const edge1 = subtract(v1, v0);
+	const edge2 = subtract(v2, v0);
+	const h = crossProduct(rayDir, edge2);
+	const a = dotProduct(edge1, h);
+
+	if (Math.abs(a) < EPSILON) return null; // ray parallel to triangle
+
+	const f = 1.0 / a;
+	const s = subtract(rayOrigin, v0);
+	const u = f * dotProduct(s, h);
+	if (u < 0 || u > 1) return null;
+
+	const q = crossProduct(s, edge1);
+	const v = f * dotProduct(rayDir, q);
+	if (v < 0 || u + v > 1) return null;
+
+	const t = f * dotProduct(edge2, q);
+	return t > EPSILON ? t : null;
+}
+```
+
+
+
+[^Moller–Trumbore]: The [Möller–Trumbore ray-triangle intersection algorithm](https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm) based on Möller and Trumbore (1997). "Fast, Minimum Storage Ray-Triangle Intersection". Journal of Graphics Tools. 2: 21–28.

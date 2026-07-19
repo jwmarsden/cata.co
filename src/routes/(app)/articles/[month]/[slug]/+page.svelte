@@ -76,8 +76,8 @@
 					<Tag size={14} />
 					{#each data.tags as tag}
 						<a
-							href="/tag/{tag}"
-							class="bg-mist text-ocean text-xs px-2 py-0.5 rounded-full no-underline transition-colors hover:bg-ocean hover:text-mist"
+							href="/tag/{tag.toLowerCase()}"
+							class="bg-mist text-ocean text-xs px-2 py-0.5 rounded-full no-underline lowercase transition-colors hover:bg-ocean hover:text-mist"
 						>
 							{tag}
 						</a>

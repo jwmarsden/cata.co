@@ -20,7 +20,7 @@
 
 <div data-theme="cata" class="min-h-screen flex flex-col">
 <nav class="bg-ocean px-6 py-3 flex items-center justify-between">
-	<a href="/" class="logo">CaTa</a>
+	<a href="/" class="logo header">CaTa</a>
 	<ul class="flex items-center gap-6 list-none m-0 p-0">
 		<li>
 			<a href="/articles" class:active={page.url.pathname.startsWith('/articles')} class="flex items-center gap-1.5 text-sm">
@@ -50,7 +50,7 @@
 </main>
 
 <footer>
-	<p>&copy; 2026 Cata.co | <a href="#top">Back to top</a></p>
+	<p>&copy; 2026 <span class="logo">CaTa</span>.co | <a href="#top">Back to top</a></p>
 </footer>
 
 <Analytics />

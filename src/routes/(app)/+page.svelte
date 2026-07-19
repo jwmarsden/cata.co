@@ -10,12 +10,12 @@
 
 <section class="py-16">
 	<div class="max-w-5xl mx-auto px-6 text-center">
-		<h1 class="text-4xl font-bold text-ocean mb-3">Very Humble Beginnings for CaTa</h1>
+		<h1 class="text-4xl font-bold text-ocean mb-3">Very Humble Beginnings for <span class="logo">CaTa</span></h1>
 		<p class="text-text-muted">A clean start with a calm ocean, mist, and amber palette.</p>
 	</div>
 </section>
 
-<hr class="h-px w-188 mx-auto my-8 bg-mist-dark border-0 ">
+<hr class="h-px w-[calc(100%-3rem)] max-w-3xl mx-auto my-8 bg-mist-dark border-0">
 
 <section class="py-16">
 	<div class="max-w-5xl mx-auto px-6">
@@ -50,7 +50,7 @@
 				<div class="card-body">
 					<div class="badge bg-ocean text-mist border-none mb-2">Latest Post</div>
 					<h3 class="card-title text-ocean">Posting</h3>
-					<p class="text-text-muted">Slow moving on Cata.co for July, but I have been working on something interesting.</p>
+					<p class="text-text-muted">Slow moving on <span class="logo">CaTa</span>.co for July, but I have been working on something interesting.</p>
 					<div class="card-actions mt-2">
 						<a href="/posts/202607/be-you-human">Read more →</a>
 					</div>
@@ -63,7 +63,7 @@
 	</div>
 </section>
 
-<hr class="h-px w-188 mx-auto my-8 bg-mist-dark border-0">
+<hr class="h-px w-[calc(100%-3rem)] max-w-3xl mx-auto my-8 bg-mist-dark border-0">
 
 <style>
 	.feature {

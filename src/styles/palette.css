@@ -110,16 +110,21 @@ nav a.active {
 	color: var(--color-amber);
 }
 
-nav a.logo {
+.logo {
 	color: var(--color-amber);
 	font-family: ABeeZee, sans-serif;
 	font-style: normal;
+	text-decoration: none;
+}
+
+.header {
 	font-size: 1.25rem;
 	font-weight: 900;
 	text-decoration: none;
 }
 
-nav a.logo:hover {
+
+a.logo:hover {
 	color: var(--color-amber);
 	text-decoration: none;
 }
