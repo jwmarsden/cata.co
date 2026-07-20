@@ -2,12 +2,36 @@
 	import { onMount } from 'svelte';
 	import { Calendar, User, Tag } from 'lucide-svelte';
 	import Giscus from '$lib/components/Giscus.svelte';
+	import Lightbox from '$lib/components/Lightbox.svelte';
 
 	let { data } = $props();
 
 	let activeId = $state('');
+	let lightbox: Lightbox;
 
 	onMount(() => {
+		// Wire up the lightbox gallery: every embedded image on the page
+		// (in document order) becomes one navigable gallery.
+		function handleImageClick(e: MouseEvent) {
+			const target = (e.target as HTMLElement).closest('.lightbox-trigger') as HTMLImageElement | null;
+			if (!target) return;
+
+			const triggers = Array.from(
+				document.querySelectorAll<HTMLImageElement>('.article-content .lightbox-trigger')
+			);
+			const items = triggers.map((img) => ({
+				src: img.dataset.full || img.src,
+				alt: img.alt,
+				caption: img.closest('figure')?.querySelector('figcaption')?.textContent ?? undefined,
+			}));
+			const startIndex = triggers.indexOf(target);
+			if (startIndex === -1) return;
+
+			lightbox.open(items, startIndex);
+		}
+
+		const articleContent = document.querySelector<HTMLElement>('.article-content');
+		if (articleContent) articleContent.addEventListener('click', handleImageClick);
 		// Immediately set activeId on TOC link click
 		function handleTocClick(e: MouseEvent) {
 			const link = (e.target as HTMLElement).closest('a[href^="#"]');
@@ -43,6 +67,7 @@
 		return () => {
 			observer.disconnect();
 			document.removeEventListener('click', handleTocClick);
+			if (articleContent) articleContent.removeEventListener('click', handleImageClick);
 		};
 	});
 </script>
@@ -117,6 +142,8 @@
 
 </div>
 
+<Lightbox bind:this={lightbox} />
+
 <style>
 	/* External links */
 	.prose :global(a[href^="http"]),
@@ -179,5 +206,26 @@
 		margin: 1.5rem auto;
 		max-width: 100%;
 		height: auto;
+	}
+
+	.prose :global(.media-embed) {
+		margin: 2rem 0;
+		text-align: center;
+	}
+
+	.prose :global(.media-embed img) {
+		margin: 0 auto;
+		cursor: zoom-in;
+		transition: opacity 0.2s;
+	}
+
+	.prose :global(.media-embed img:hover) {
+		opacity: 0.9;
+	}
+
+	.prose :global(.media-embed figcaption) {
+		color: var(--color-text-muted);
+		font-size: 0.85rem;
+		margin-top: 0.5rem;
 	}
 </style>

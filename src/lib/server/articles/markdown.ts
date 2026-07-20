@@ -3,6 +3,7 @@ import markedFootnote from 'marked-footnote';
 import markedShiki from 'marked-shiki';
 import markedKatex from 'marked-katex-extension';
 import { createHighlighter } from 'shiki';
+import { registerImageEmbed } from '$lib/server/markdown/imageEmbed';
 
 export interface TocEntry {
 	title: string;
@@ -99,5 +100,7 @@ marked.use({
 		}
 	}]
 });
+
+registerImageEmbed(marked);
 
 export { marked };

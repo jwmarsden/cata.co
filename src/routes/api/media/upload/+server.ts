@@ -4,7 +4,7 @@ import { BUCKET_NAME } from '$env/static/private';
 import { json, error } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { media } from '$lib/server/db/schema';
-import { generateImageThumbnail } from '$lib/server/bucket/thumbnail';
+import { generateImageThumbnail, generateEmbedVariant, generateLightboxVariant, getImageDimensions } from '$lib/server/bucket/thumbnail';
 import { syncMediaTagsToRedis } from '$lib/server/tags/tag-sync';
 
 export async function POST({ request, locals }) {
@@ -36,6 +36,10 @@ export async function POST({ request, locals }) {
 
 	// Generate or use pre-supplied thumbnail
 	let thumbnailKey: string | null = null;
+	let mediumKey: string | null = null;
+	let largeKey: string | null = null;
+	let width: number | null = null;
+	let height: number | null = null;
 	try {
 		if (thumbnail) {
 			// Use client-side generated thumbnail (video)
@@ -48,8 +52,13 @@ export async function POST({ request, locals }) {
 				ContentType: 'image/jpeg',
 			}));
 		} else if (file.type.startsWith('image/')) {
-			// Generate server-side thumbnail for images
+			// Generate server-side thumbnail + embed/lightbox variants for images
 			thumbnailKey = await generateImageThumbnail(buffer, id);
+			mediumKey = await generateEmbedVariant(buffer, id);
+			largeKey = await generateLightboxVariant(buffer, id);
+			const dims = await getImageDimensions(buffer);
+			width = dims.width;
+			height = dims.height;
 		}
 	} catch (err) {
 		console.error('Thumbnail failed:', err);
@@ -62,6 +71,10 @@ export async function POST({ request, locals }) {
 		id,
 		key,
 		thumbnailKey,
+		mediumKey,
+		largeKey,
+		width,
+		height,
 		filename: file.name,
 		friendlyName,
 		altText,

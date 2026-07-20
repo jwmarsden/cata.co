@@ -82,10 +82,12 @@
 	function isVideo(contentType: string) { return contentType.startsWith('video/'); }
 
 	function markdownLink(file: MediaWithTags): string {
+		if (isImage(file.contentType)) {
+			const caption = file.altText || file.friendlyName;
+			return `![[image:${file.id}]] {${caption}}`;
+		}
 		const url = `/api/media/${file.id}?redirect=true`;
-		return isImage(file.contentType)
-			? `![${file.altText || file.friendlyName}](${url})`
-			: `[${file.friendlyName}](${url})`;
+		return `[${file.friendlyName}](${url})`;
 	}
 
 	async function loadFiles() {
