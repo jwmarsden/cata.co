@@ -45,14 +45,14 @@ Conceptually, its possible create this in a number of ways as long as the model 
 #### Consider the pavement wearing course geometry
 The dataset for pavements are subject to individual digital engineering decisions varying from project to project. Its very likely this will be a large polygon representing the road surface.
 
-![Example Pavement Surface Geometry|600](/images/posts/pavement-surface-geometry.png)
+![[image:a6778b24-c55f-434d-9033-5e838f19e799]] {Pavement Surface Example}
 
 A reasonable project would decide to provide some level of meta-information on subsections of the polygon representing carriageway's that can be aggregated. The road surface polygon could be processed to find the long sections and an optimisation approach could be taken to fit the appropriate sets of centreline's that best represent the road network.
 
 #### Consider the line marking geometry  
 All jurisdictions in Australia derive or are adjacent to the the [Austroads](https://austroads.gov.au/) standards for line markings (for obvious reasons). A over simplification is that carriageway's have shoulders marked by solid lines and carriageway lane's are separated by broken lines.  
 
-![Example Line Marking Geometry|600](/images/posts/line-marking-geometry.png)
+![[image:cd949631-a68e-415a-9dbd-fb4bf8af0d1d]] {line marking geometry example}
 
 A reasonable project would likely model these as a central set of control lines and symbol locations that are utilised in GIS, BIM and 2D drawing sheets. Practically, the would lag the design of the road base and pavement sections and their 3-dimensional location is ultimately informed by draping what is required onto the road pavement surface aligned to the standards. For BIM, the road line markings are a set of polygons that are coincident with the road pavement surface that represent the required road line marking's.
 
@@ -160,19 +160,19 @@ The method works surprisingly well and for my network, it has been flexible enou
 
 The following figure is a GIS render of example input IFC. 
 
-![Example Pavement Surface Geometry|700](/images/posts/input-road-sections-gis.png)
+![[image:5fae0aeb-c4be-47b9-b621-88b5d882df96]] {input road sections example}
 
 These control lines contain $x$, $y$ and $z$ coordinates. The top most example is a typical Australian road with a left and right lane on a single carriageway. The middle and the bottom are more complex examples like those that I needed to capture containing multi-lane carriageways with ramps entering an exiting.  
 
 Running the process over the IFC and the segment configuration leads to the following centrelines being generated. 
 
-![Centerlines Calculated from the input|700](/images/posts/centerline-road-network-gis1.png)
+![[image:cd2eb670-6ad4-48b7-bd5c-c9fb085910db]] {centerline road network example}
 
 The top typical example has what you would expect for a centerline, its completely coincident with the broken line down the middle of the carriageway. The multilane lane carriageways are a lot more interesting. You will notice the middle centerline appears to be offset but it is motivated by the "feels wrong test" and not wanting to skew the centerline left or right when the ramp connects. 
 
 Lastly, its very easy for the generated lines to be overfit and to result in very complex geometry. In my case, the lines that were based on the centre of each broken dash were overly complex and in some cases looked quite wrong at the joins. To address this, I have looked at the sections between the vertices and removed majority of the vertices if they do not contribute to the overall shape of the centerline. You can see this viewing the vertices in the GIS.
 
-![Centerlines Complexity|700](/images/posts/centerline-road-network-gis2.png)
+![[image:18463946-184d-409b-b17e-531f02fea5d6]] {centerline road network example}
 
 So that is it. This has been distracting me in my spare time but making progress on something relevant and interesting is nice.
 
