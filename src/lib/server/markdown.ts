@@ -4,6 +4,7 @@ import markedShiki from 'marked-shiki';
 import markedKatex from 'marked-katex-extension';
 import { createHighlighter } from 'shiki';
 import { registerImageEmbed } from '$lib/server/markdown/imageEmbed';
+import { registerKatexPunctuationFix } from '$lib/server/markdown/katexPunctuationFix';
 
 const highlighter = await createHighlighter({
 	themes: ['github-light'],
@@ -20,6 +21,7 @@ marked.use(markedShiki({
 	}
 }));
 marked.use(markedKatex({ throwOnError: false }));
+registerKatexPunctuationFix(marked);
 marked.use({
 	renderer: {
 		image({ href, title, text }) {

@@ -58,6 +58,11 @@
 				{data.date ? new Date(data.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'Unknown date'}
 			</span>
 			<span class="text-[#ccc]">·</span>
+			<span class="flex items-center gap-1">
+				<User size={14} />
+				<a href="/author/{data.author}" class="text-text-muted no-underline hover:text-amber">{data.author}</a>
+			</span>
+			<span class="text-[#ccc]">·</span>
 			<span class="flex items-center gap-1 flex-wrap">
 				<Tag size={14} />
 				{#each data.tags as tag}
@@ -68,11 +73,6 @@
 						{tag}
 					</a>
 				{/each}
-			</span>
-			<span class="text-[#ccc]">·</span>
-			<span class="flex items-center gap-1">
-				<User size={14} />
-				<a href="/author/{data.author}" class="text-text-muted no-underline hover:text-amber">{data.author}</a>
 			</span>
 		</div>
 
