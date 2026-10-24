@@ -39,7 +39,7 @@
 					<div class="badge bg-amber text-ocean border-none mb-2">Featured Article</div>
 					<h3 class="card-title text-ocean">Occlusion Culling</h3>
 					<p class="text-text-muted">Learn about the process of occlusion culling in computer graphics.</p>
-					<img src="/api/media/af1b0915-393a-44c8-82c5-53ec4421ca22/view" alt="Occlusion Cull" width="200" class="feature border-l-amber"/>
+					<img src="/api/media/b845bef0-afc3-48b5-b9e1-a7ca8b37ca68/view" alt="Occlusion Cull" width="200" class="feature border-l-amber"/>
 					<div class="card-actions mt-2">
 						<a href="articles/graphics/occlusion-culling">Read more →</a>
 					</div>

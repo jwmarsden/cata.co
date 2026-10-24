@@ -36,7 +36,7 @@ Sick. Everyone. Weeks and weeks.
 
 We now have an [Occlusion Cull article](/articles/graphics/occlusion-culling).
 
-![[image:af1b0915-393a-44c8-82c5-53ec4421ca22]] {Occlusion Cull Dragon Example}
+![[image:b845bef0-afc3-48b5-b9e1-a7ca8b37ca68]] {Example dragon model, with occlusion cull}
 
 This now allows me to move onto the next step of the article flow.
 
