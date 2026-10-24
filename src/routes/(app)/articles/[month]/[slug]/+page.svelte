@@ -228,4 +228,16 @@
 		font-size: 0.85rem;
 		margin-top: 0.5rem;
 	}
+
+	/* ![[code:file#function]]: a function quoted from a scene library */
+	.prose :global(.code-embed pre) {
+		margin-bottom: 0.25rem;
+	}
+
+	.prose :global(.code-embed-source) {
+		color: var(--color-text-muted);
+		font-size: 0.8rem;
+		margin-top: 0;
+		text-align: right;
+	}
 </style>

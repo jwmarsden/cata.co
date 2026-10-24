@@ -1,10 +1,10 @@
 ---
-title: Occlusion Culling - 🚧 Work in progress
-date: 2026-06-22
+title: Occlusion Culling
+date: 2026-10-24
 updated:
 excerpt: Occlusion Culling is a fundamental geometric process for discarding polygons that are not visible due to other geometry obstructing the visibility from a view vector.
 author: jwm
-tags: [explainer, 3d, 2d, graphics, mathematics, linear-algebra, geometry, rendering, three-js]
+tags: [explainer, 3d, 2d, graphics, mathematics, linear-algebra, occlusion-cull, moller–trumbore, geometry, rendering, three-js]
 ---
 
 ## Introduction
@@ -42,7 +42,7 @@ Where:
 
 ### View Point Definition
 
-The view point for is extended from a direction in the [Back-face culling](/articles/graphics/backface-culling) to an origin in space (formally $o_{origin} \in \mathbb{R}^3$ ) and a direction (our $\vec{v}_{view}$ representation). 
+The view point is extended from a direction in the [Back-face culling](/articles/graphics/backface-culling) to an origin in space (formally $o_{origin} \in \mathbb{R}^3$ ) and a direction (our $\vec{v}_{view}$ representation). 
 
 
 ### Mesh Face Plane
@@ -128,41 +128,148 @@ $
 \color{#1b3a4bcc}\quad\quad\normalsize\text{If}\:\text{sign}\big((\vec{e}_1 \times \vec{c}_1) \cdot \hat{n}\big) = \text{sign}\big((\vec{e}_2 \times \vec{c}_2) \cdot \hat{n}\big) = \text{sign}\big((\vec{e}_3 \times \vec{c}_3) \cdot \hat{n}\big)\text{\:then\:}v_q\text{\:intercepts\:}P\text{\:inside\:}f. 
 $
 
+### Ray-Triangle Intersection
 
+The two steps above, finding $t$ on the plane and then checking that $v_q$ is inside $f$, are what a ray-triangle intersection test does. The implementation uses the Möller–Trumbore algorithm[^Moller–Trumbore], which does both at once. It writes $v_q$ in [barycentric coordinates](https://en.wikipedia.org/wiki/Barycentric_coordinate_system) $(u, v)$ of the face,
 
-### Method one, raycast depth check from view point to find hidden faces 
+$$v_q = (1 - u - v)\,v_{n} + u\,v_{o} + v\,v_{p}$$
 
-The first method is a greedy approach, it involves the raycast from the view point and checking every triangle against the others to determine obstruction and therefore order from the view point. The processing complexity of this method is $O(n^2)$ meaning it wont scale into detailed geometry and complex scenes. 
+and solves for $t$, $u$ and $v$ together. The ray hits inside $f$ when $u \geq 0$, $v \geq 0$ and $u + v \leq 1$, which is the edge-side test expressed in the face's own coordinates. It never builds the plane equation, so it saves both work and memory.
 
-Later, we will look at more sophisticated approaches that can scale. 
+### Occlusion Rule
 
-### Raycast
+For the top-down view the ray runs from a point on a face back towards the viewer, in the direction $-\vec{v}_{view}$. If that ray passes through another forward-facing face, the other face sits between the point and the viewer, and the point is hidden.
 
-```javascript
-function rayTriangleIntersect(rayOrigin, rayDir, v0, v1, v2) {
-	const EPSILON = 1e-7;
+A single point is not enough to decide for a whole face. A face can have its centre hidden under an overhang while one of its corners pokes out and is still seen. Each face $f = (v_{n},v_{o},v_{p})$ is therefore tested from four sample points, its three vertices and its centroid,
 
-	const edge1 = subtract(v1, v0);
-	const edge2 = subtract(v2, v0);
-	const h = crossProduct(rayDir, edge2);
-	const a = dotProduct(edge1, h);
+$$S(f) = \{\, v_{n},\; v_{o},\; v_{p},\; c_{f} \,\} \quad \text{where} \quad c_{f} = \tfrac{1}{3}(v_{n} + v_{o} + v_{p})$$
 
-	if (Math.abs(a) < EPSILON) return null; // ray parallel to triangle
+and a face is only occluded when **every** one of its sample points is hidden. If the viewer can see any of them, the face stays.
 
-	const f = 1.0 / a;
-	const s = subtract(rayOrigin, v0);
-	const u = f * dotProduct(s, h);
-	if (u < 0 || u > 1) return null;
+Rays cast from a vertex start *on* every face that shares that vertex, so those neighbours would report a hit at $t = 0$. A hit only counts when $t > \varepsilon$, where $\varepsilon$ is a millionth of the size of the mesh, so the same rule works for a teapot or a dragon.
 
-	const q = crossProduct(s, edge1);
-	const v = f * dotProduct(rayDir, q);
-	if (v < 0 || u + v > 1) return null;
+The rule is an approximation. A large face can be partly visible between its sample points while all four are hidden, and it is then discarded. The exact answer needs each face clipped against the faces in front of it, which is where the [Conclusion](#conclusion) picks up.
 
-	const t = f * dotProduct(edge2, q);
-	return t > EPSILON ? t : null;
-}
-```
+### Algorithm Formalisation
 
+#### Method One: Brute Force
 
+The first method is a greedy approach: every sample point of every forward-facing face is tested against every other forward-facing face (with in-line comments),
+
+$
+\quad\normalsize\text{For each } f \in F_{f}: \\
+\color{#f2a65a} \quad\quad\small\text{\#\:assume\:hidden\:until\:a\:sample\:point\:is\:seen}\\
+\color{#1b3a4bcc} \quad\quad\normalsize\text{Let}\:occluded = \text{true}\\
+\color{#1b3a4bcc} \quad\quad\normalsize\text{For each } s \in S(f): \\
+\color{#f2a65a} \quad\quad\quad\small\text{\#\:cast\:the\:ray\:}s + t(-\vec{v}_{view})\text{\:against\:every\:other\:face}\\
+\color{#1b3a4bcc} \quad\quad\quad\normalsize\text{Let}\:blocked = \exists\, g \in F_{f} \setminus \{f\} : t_{g} > \varepsilon\\
+\color{#1b3a4bcc} \quad\quad\quad\normalsize\text{If}\:\neg\,blocked \:\text{then}\: occluded = \text{false}\\
+\color{#1b3a4bcc} \quad\quad\normalsize\text{If}\:occluded \:\text{then discard}\: f \:\text{else}\: f \:\text{is visible}\\
+$
+
+With $n = \vert{}F_{f}\vert{}$ faces and four rays per face, the processing complexity is $O(n^2)$. That is fine for a teapot but it does not scale into detailed geometry and complex scenes, as the [results](#cull-operation-result) show.
+
+#### Method Two: Face Grid
+
+Every ray is parallel to $\vec{v}_{view}$. Looking along the view, a ray is a single point, and the only faces it can pass through are the ones whose outline covers that point. Most faces can be ruled out without casting anything.
+
+Choose two unit axes $\hat{u}$ and $\hat{w}$ that span the plane perpendicular to $\vec{v}_{view}$. Projecting a point onto that plane is two dot products,
+
+$$\pi(v) = (v \cdot \hat{u},\; v \cdot \hat{w})$$
+
+The footprint of a face is the bounding box of its three projected vertices. The footprints are binned into an $m \times m$ grid with $m \approx \sqrt{n}$, which gives about one face per cell. A ray from $s$ only needs testing against the faces in the cell that holds $\pi(s)$, and only those whose footprint contains $\pi(s)$,
+
+$
+\quad\normalsize\text{For each } f \in F_{f}, \text{ bin } f \text{ into every cell its footprint overlaps} \\
+\quad\normalsize\text{For each } f \in F_{f}: \\
+\color{#1b3a4bcc} \quad\quad\normalsize\text{For each } s \in S(f): \\
+\color{#f2a65a} \quad\quad\quad\small\text{\#\:only\:the\:faces\:whose\:footprint\:covers\:the\:ray}\\
+\color{#1b3a4bcc} \quad\quad\quad\normalsize\text{Let}\:G_{s} = \{\, g \in \text{cell}(\pi(s)) : \pi(s) \in \text{footprint}(g) \,\}\\
+\color{#1b3a4bcc} \quad\quad\quad\normalsize\text{Let}\:blocked = \exists\, g \in G_{s} \setminus \{f\} : t_{g} > \varepsilon\\
+\color{#1b3a4bcc} \quad\quad\normalsize\text{(the rest as in method one)}\\
+$
+
+The grid only skips faces that a ray cannot hit, so method two gives exactly the same result as method one. Building the grid is $O(n)$ and each ray tests a handful of faces, so for a mesh spread fairly evenly across the view the whole process is close to $O(n)$.
+
+## Implementation
+
+The following section is an occlusion culling implementation using [three.js](https://threejs.org/). Unlike the [Back-face culling](/articles/graphics/backface-culling) article, the code below is not a copy: each listing is pulled from [`culling.js`](/api/scenes/lib/culling.js), the module the scene at the end of the article runs. The vector operations (`subtract`, `normalize`, `crossProduct` and `dotProduct`) are the ones described in the [Back-face culling implementation](/articles/graphics/backface-culling#cull-operation-implementation).
+
+### Input Geometry
+
+The input geometry is the same as for [Back-face culling](/articles/graphics/backface-culling#input-geometry): the Utah Teapot, the Stanford Bunny and the XYZ RGB Asian Dragon.
+
+### Cull Operation Implementation
+
+#### Back-face Cull
+
+Occlusion culling starts from the forward-facing faces $F_{f}$, so the back-face cull comes first. It is the same algorithm as before, refactored to return the two face sets rather than build meshes, so the occlusion cull can take $F_{f}$ straight from it.
+
+![[code:culling#doBackfaceCull]]
+
+#### Ray-Triangle Intersect
+
+The [Möller–Trumbore](#ray-triangle-intersection) intersection returns $t$, the distance along the ray to the face, or `null` when the ray misses.
+
+![[code:culling#rayTriangleIntersect]]
+
+#### Sample Points
+
+The [sample points](#occlusion-rule) $S(f)$: the three vertices and the centroid.
+
+![[code:culling#samplePoints]]
+
+#### Ray Hit Test
+
+A ray from a sample point is blocked by a face when it crosses it further away than $\varepsilon$.
+
+![[code:culling#rayHitsFace]]
+
+$\varepsilon$ is scaled to the size of the mesh.
+
+![[code:culling#minHitDistance]]
+
+#### Brute Force Occlusion Cull
+
+The [brute force method](#method-one-brute-force), where every sample point of every face is tested against every other face.
+
+![[code:culling#occlusionCullBruteForce]]
+
+#### Face Grid Occlusion Cull
+
+Building the [face grid](#method-two-face-grid) over the footprints. It returns a `candidates` function giving the faces a ray from a point could hit.
+
+![[code:culling#buildFaceGrid]]
+
+The occlusion cull itself is the brute force method with `faces.some(...)` swapped for `grid.candidates(p).some(...)`.
+
+![[code:culling#occlusionCullGrid]]
+
+### Cull Operation Result
+
+The following scene runs the back-face cull and then the occlusion cull (method two) on the input meshes. Visible faces are amber, back faces are red and occluded faces are purple. The checkboxes hide the back faces and the occluded faces, and the view button looks down $\vec{v}_{view}$ to show that the amber faces alone make up everything seen from above. The panel in the corner shows the face counts and how long the culling took in your browser.
+
+![[scene:working-cull-ortho]]{Occlusion Cull Processing}
+
+The two methods were timed on the same meshes (Node.js 24 on a 12" MacBook, an Intel Core i5-7Y54):
+
+| Mesh | Faces | Back faces | Occluded | Visible | Method one | Method two |
+|---|---:|---:|---:|---:|---:|---:|
+| Utah Teapot | 6,320 | 2,797 | 369 | 3,154 | 1,352 ms | 88 ms |
+| XYZ RGB Dragon | 249,882 | 117,859 | 29,245 | 102,778 | about 30 min[^estimate] | 760 ms |
+
+Both methods produced identical face sets on the teapot, and on a 6,000-face sample of the dragon.
+
+[^estimate]: Estimated from the teapot: method one grows with the square of the number of forward-facing faces, and the dragon has about 37 times as many (132,023 against 3,523), so roughly $1{,}352\text{ ms} \times 37.5^2$.
+
+## Conclusion
+
+This article on occlusion culling builds on [Back-face culling](/articles/graphics/backface-culling): from the faces that point towards the viewer, it discards the ones hidden behind other faces. It derives the ray-plane intercept and the inside-face test, uses Möller–Trumbore to do both at once, and decides each face from rays cast at its vertices and its centroid. The brute force method follows the definition directly but is $O(n^2)$; the face grid gives the same result in close to linear time, because looking along the view every ray is just a point.
+
+The occluded faces show up where you would expect: under the teapot's lid knob, inside the curve of its handle and under the spout.
+
+Two limitations remain. The sample point rule is an approximation, so a face that is only partly hidden between its sample points can still be discarded. And the grid relies on every ray being parallel, which holds for the orthographic, top-down view used here but not for a perspective view, where rays fan out from the view point.
+
+The next step on the journey to a two-dimensional silhouette of the geometry as seen from above is to stop treating faces as all-or-nothing: clip each visible face against the faces in front of it, project what is left onto the ground plane, and merge the pieces into polygons a GIS can use.
 
 [^Moller–Trumbore]: The [Möller–Trumbore ray-triangle intersection algorithm](https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm) based on Möller and Trumbore (1997). "Fast, Minimum Storage Ray-Triangle Intersection". Journal of Graphics Tools. 2: 21–28.

@@ -22,7 +22,14 @@ export async function GET({ url }) {
 		error(403, 'Host not allowed');
 	}
 
-	const res = await fetch(targetUrl.toString());
+	let res: Response;
+	try {
+		res = await fetch(targetUrl.toString());
+	} catch (err) {
+		// the remote host is unreachable (refused, DNS, TLS...): a 502, not a crash
+		console.warn(`[proxy] ${targetUrl.hostname} unreachable:`, (err as Error).cause ?? err);
+		error(502, 'Failed to fetch resource');
+	}
 	if (!res.ok) error(502, 'Failed to fetch resource');
 
 	const body = await res.arrayBuffer();

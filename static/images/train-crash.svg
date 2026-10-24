@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" role="img" aria-labelledby="title">
+	<title id="title">A streamlined train running off a broken viaduct under an amber moon</title>
+	<defs>
+		<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#132C3A"/>
+			<stop offset="0.75" stop-color="#2A5266"/>
+		</linearGradient>
+		<radialGradient id="glow">
+			<stop offset="0.55" stop-color="#F2A65A" stop-opacity="0.35"/>
+			<stop offset="1" stop-color="#F2A65A" stop-opacity="0"/>
+		</radialGradient>
+		<linearGradient id="beam" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#F7D9A8" stop-opacity="0.55"/>
+			<stop offset="1" stop-color="#F7D9A8" stop-opacity="0"/>
+		</linearGradient>
+		<linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#16374A"/>
+			<stop offset="1" stop-color="#0C2230"/>
+		</linearGradient>
+	</defs>
+
+	<!-- sky, stars, moon -->
+	<rect width="320" height="200" fill="url(#sky)"/>
+	<g fill="#E8F4F8">
+		<circle cx="24" cy="20" r="0.9" opacity="0.7"/><circle cx="62" cy="44" r="0.6" opacity="0.5"/>
+		<circle cx="104" cy="14" r="0.8" opacity="0.6"/><circle cx="142" cy="34" r="0.6" opacity="0.5"/>
+		<circle cx="176" cy="12" r="0.9" opacity="0.7"/><circle cx="300" cy="22" r="0.8" opacity="0.6"/>
+		<circle cx="306" cy="58" r="0.6" opacity="0.5"/><circle cx="84" cy="70" r="0.5" opacity="0.4"/>
+	</g>
+	<circle cx="236" cy="80" r="74" fill="url(#glow)"/>
+	<circle cx="236" cy="80" r="40" fill="#F2A65A"/>
+	<circle cx="236" cy="80" r="40" fill="none" stroke="#F7D9A8" stroke-width="1" opacity="0.6"/>
+
+	<!-- sea, with the moon's reflection -->
+	<rect y="170" width="320" height="30" fill="url(#sea)"/>
+	<g stroke="#F2A65A" stroke-linecap="round">
+		<path d="M214 176 H258" stroke-width="1.6" opacity="0.7"/>
+		<path d="M220 182 H252" stroke-width="1.4" opacity="0.5"/>
+		<path d="M226 188 H246" stroke-width="1.2" opacity="0.35"/>
+		<path d="M231 194 H241" stroke-width="1" opacity="0.2"/>
+	</g>
+	<g stroke="#E8F4F8" stroke-linecap="round" opacity="0.18">
+		<path d="M14 180 H60"/><path d="M84 189 H140"/><path d="M276 186 H312"/>
+	</g>
+	<!-- ripples where the debris lands -->
+	<g fill="none" stroke="#E8F4F8" opacity="0.35">
+		<ellipse cx="216" cy="174" rx="9" ry="1.6"/><ellipse cx="216" cy="174" rx="16" ry="2.8" opacity="0.5"/>
+	</g>
+
+	<!-- viaduct, in silhouette: the near span ends in a break -->
+	<g fill="#0F2633">
+		<path d="M0 118 H192 L197 122 L190 127 L195 131 L187 135 V172 H178 V154 A20.5 20.5 0 0 0 137 154 V172 H128 V154 A20.5 20.5 0 0 0 87 154 V172 H78 V154 A20.5 20.5 0 0 0 37 154 V172 H28 V154 A28 28 0 0 0 0 138 Z"/>
+		<path d="M320 118 H256 L250 123 L256 127 L251 132 L258 136 V172 H267 V154 A20.5 20.5 0 0 1 308 154 V172 H317 V140 H320 Z"/>
+	</g>
+	<g stroke="#C8DDE6" stroke-width="0.8" opacity="0.55">
+		<path d="M0 118 H191"/><path d="M257 118 H320"/>
+	</g>
+
+	<!-- speed lines -->
+	<g stroke="#E8F4F8" stroke-linecap="round" opacity="0.35">
+		<path d="M0 100 H14" /><path d="M0 106 H10"/><path d="M2 112 H16"/>
+	</g>
+
+	<!-- carriages: mist bodies, a dark window band, an amber pinstripe -->
+	<g>
+		<rect x="18" y="99" width="66" height="17" rx="4" fill="#E8F4F8"/>
+		<rect x="22" y="102.5" width="58" height="4.5" rx="2" fill="#1B3A4B"/>
+		<rect x="18" y="110" width="66" height="1.4" fill="#F2A65A"/>
+	</g>
+	<g transform="rotate(-12 88 116)">
+		<rect x="88" y="99" width="66" height="17" rx="4" fill="#E8F4F8"/>
+		<rect x="92" y="102.5" width="58" height="4.5" rx="2" fill="#1B3A4B"/>
+		<rect x="88" y="110" width="66" height="1.4" fill="#F2A65A"/>
+	</g>
+
+	<!-- the streamliner, tipping over the edge, its headlight sweeping down -->
+	<g transform="rotate(32 190 117)">
+		<path d="M238 110 L330 150 L300 196 Z" fill="url(#beam)"/>
+		<path d="M156 99 H212 Q236 100 241 116 H156 Z" fill="#E8F4F8"/>
+		<path d="M160 102.5 H210 Q222 103 226 107 H160 Z" fill="#1B3A4B"/>
+		<rect x="156" y="110" width="80" height="1.4" fill="#F2A65A"/>
+		<path d="M226 107 Q236 108 241 116 H230 Z" fill="#F2A65A"/>
+		<circle cx="238" cy="111" r="1.8" fill="#FFF4E0"/>
+		<rect x="158" y="116" width="78" height="2" rx="1" fill="#0F2633"/>
+	</g>
+
+	<!-- falling fragments -->
+	<g fill="#0F2633">
+		<path d="M200 140 l5 -2 l2 5 l-5 2 Z"/>
+		<path d="M212 152 l4 1 l-1 4 l-4 -1 Z"/>
+		<path d="M206 162 l3 -1 l1 3 l-3 1 Z"/>
+	</g>
+	<g fill="#C8DDE6" opacity="0.8">
+		<rect x="222" y="146" width="2.2" height="2.2" transform="rotate(30 223 147)"/>
+		<rect x="196" y="154" width="1.8" height="1.8"/>
+	</g>
+</svg>

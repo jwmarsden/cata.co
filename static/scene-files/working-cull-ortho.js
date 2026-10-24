@@ -6,10 +6,15 @@ import {
 	makeButton,
 	makeUIContainer,
 } from '/api/scenes/lib/scene-utils.js';
+import {
+	extractGeometry,
+	doBackfaceCull,
+	occlusionCullGrid,
+} from '/api/scenes/lib/culling.js';
 
 export const meta = {
-	title: 'Working Cull Scene',
-	description: 'An interactive mesh demonstrating back-face culling',
+	title: 'Occlusion Cull',
+	description: 'An interactive mesh demonstrating back-face and occlusion culling',
 	height: 500,
 };
 
@@ -29,6 +34,7 @@ export function init(container) {
 	//let teapotWireframeMesh = null;
 	let showWireframe = false;
 	let showCullFaces = true;
+	let showOccludedFaces = true;
 
 	let isTopView = false;
 	let topViewBtn = null;
@@ -75,6 +81,15 @@ export function init(container) {
 		background: rgba(0,0,0,0.6);
 		padding: 6px 10px; border-radius: 4px;
 	`
+	const statsCSS = `
+		position: absolute; bottom: 12px; right: 12px;
+		color: #E8F4F8; font-size: 12px;
+		font-family: 'DM Mono', monospace;
+		background: rgba(27,58,75,0.9);
+		border: 1px solid #C8DDE6;
+		padding: 6px 10px; border-radius: 6px;
+		pointer-events: none;
+	`;
 
 	// Geometry dropdown
 	const select = document.createElement('select');
@@ -122,6 +137,21 @@ export function init(container) {
 	showCullLabel.appendChild(showCullCheckbox);
 	showCullLabel.appendChild(document.createTextNode('Back-faces'));
 	ui.appendChild(showCullLabel);
+
+	// Show Occluded checkbox
+	const showOccludedLabel = document.createElement('label');
+	showOccludedLabel.style.cssText = labelCSS;
+	const showOccludedCheckbox = document.createElement('input');
+	showOccludedCheckbox.type = 'checkbox';
+	showOccludedCheckbox.checked = true;
+	showOccludedCheckbox.style.cursor = 'pointer';
+	showOccludedCheckbox.addEventListener('change', () => {
+		showOccludedFaces = showOccludedCheckbox.checked;
+		updateOccludedVisibility();
+	});
+	showOccludedLabel.appendChild(showOccludedCheckbox);
+	showOccludedLabel.appendChild(document.createTextNode('Occluded'));
+	ui.appendChild(showOccludedLabel);
 	
 	// Top view button
 	topViewBtn = makeButton('👁 View', () => toggleTopView());
@@ -164,6 +194,11 @@ export function init(container) {
 	wrapper.appendChild(ui);
 	container.appendChild(wrapper);
 
+	// Face counts and the time the culling took
+	const stats = document.createElement('div');
+	stats.style.cssText = statsCSS;
+	wrapper.appendChild(stats);
+
 
 	async function meshChange(meshGroup, degrees=0) {
 		if (!meshGroup) return;
@@ -179,8 +214,20 @@ export function init(container) {
 		const view_v = [ 0, -1, 0 ];
 
 		innerMesh.rotation.z = parseFloat(rotateSlider.value) * (Math.PI / 180);
-		
-		for (const mesh of doBackfaceCull(view_v, innerMesh)) {
+
+		// Back-face cull, then occlusion cull the faces left facing the viewer
+		const start = performance.now();
+		const { vSet, fSet } = extractGeometry(innerMesh);
+		const { frontFaces, backFaces } = doBackfaceCull(view_v, vSet, fSet);
+		const { visibleFaces, occludedFaces } = occlusionCullGrid(view_v, vSet, frontFaces);
+		const ms = performance.now() - start;
+
+		const fmt = (n) => n.toLocaleString('en-AU');
+		stats.textContent =
+			`${fmt(fSet.length)} faces · ${fmt(backFaces.length)} back · ` +
+			`${fmt(occludedFaces.length)} occluded · ${fmt(visibleFaces.length)} visible · ${ms.toFixed(0)} ms`;
+
+		for (const mesh of buildCullMeshes(innerMesh, vSet, visibleFaces, backFaces, occludedFaces)) {
 			cullMeshGroup.add(mesh);
 		}
 
@@ -200,116 +247,9 @@ export function init(container) {
 		scene.add(cullMeshGroup);
 	}
 
-	function extractGeometry(mesh) {
-		const position = mesh.geometry.attributes.position;
-		const index = mesh.geometry.index;
-		const vSet = [];
-		for (let i = 0; i < position.count; i++) {
-			vSet.push([position.getX(i), position.getY(i), position.getZ(i)]);
-		}
-		const fSet = [];
-		if (index) {
-			for (let i = 0; i < index.count; i += 3) {
-				fSet.push([index.getX(i), index.getX(i + 1), index.getX(i + 2)]);
-			}
-		} else {
-			for (let i = 0; i < position.count; i += 3) {
-				fSet.push([i, i + 1, i + 2]);
-			}
-		}
-		return { vSet, fSet };
-	}
-
-	// Subtracts vector b from vector a, component by component.
-	// Expects both a and b to be 3‑element arrays: [x, y, z].
-	// Returns a new 3‑element array representing the difference.
-	function subtract(a, b) {
-		return [
-			a[0] - b[0], // x component
-			a[1] - b[1], // y component
-			a[2] - b[2]  // z component
-		];
-	}
-
-	// Returns a new vector pointing in the same direction but with unit length.
-	// If the vector has zero length, returns [0, 0, 0] to avoid division by zero.
-	function normalize(v) {
-		// Compute the Euclidean length (magnitude) of the vector
-		const len = Math.sqrt(
-			Math.pow(v[0], 2) + 
-			Math.pow(v[1], 2) + 
-			Math.pow(v[2], 2)
-		);
-
-		// If length is non-zero, divide each component by the length
-		return len > 0
-			? [v[0] / len, v[1] / len, v[2] / len]
-			: [0, 0, 0]; // Zero vector stays zero
-	}
-
-	// Computes the cross product of two vectors a and b.
-	// The result is a vector perpendicular to both a and b 
-	// following the right‑hand rule.
-	function crossProduct(a, b) {
-		return [
-			a[1] * b[2] - a[2] * b[1], // x component
-			a[2] * b[0] - a[0] * b[2], // y component
-			a[0] * b[1] - a[1] * b[0], // z component
-		];
-	}
-
-	// Computes the dot product of two vectors a and b.
-	function dotProduct(a, b) {
-		return (a[0] * b[0]) +
-			(a[1] * b[1]) +
-			(a[2] * b[2]);
-	}
-
-	// Performs backface culling on a mesh using a view direction vector `v_view`.
-	// Faces whose normals point toward the viewer are marked visible;
-	function doBackfaceCull(v_view, originalMesh) {
-
-		// Extract vertex set (vSet) and face index set (fSet)
-		const { vSet, fSet } = extractGeometry(originalMesh);
-
-		const visibleFaces = []; // indices of faces facing the viewer
-		const culledFaces  = []; // indices of faces facing away
-
-		for (const f of fSet) {
-
-			// Retrieve the 3 vertices of the face
-			const { v1, v2, v3 } = {
-				v1: vSet[f[0]],
-				v2: vSet[f[1]],
-				v3: vSet[f[2]]
-			};
-
-			// Compute edge vectors of the face
-			const e1 = subtract(v2, v1);
-			const e2 = subtract(v3, v1);
-
-			// Compute face normal via cross product
-			const e1xe2 = crossProduct(e1, e2);
-
-			// Normalize the normal vector
-			const e1xe2Normal = normalize(e1xe2);
-
-			// Dot product with view vector determines orientation
-			const z = dotProduct(e1xe2Normal, v_view);
-
-			// If the face normal points toward the viewer, keep it
-			if (z <= 0) {
-				visibleFaces.push(...f);
-			} else {
-				culledFaces.push(...f);
-			}
-		}
-
-		// Build two meshes: visible faces and culled faces
-		return buildCullMeshes(originalMesh, vSet, visibleFaces, culledFaces);
-	}
-
-	function buildCullMeshes(originalMesh, vertices, visibleFaces, culledFaces) {
+	// Builds three meshes from the face sets: visible faces (amber), back
+	// faces (red) and occluded faces (purple). Faces are [n, o, p] arrays.
+	function buildCullMeshes(originalMesh, vertices, visibleFaces, culledFaces, occludedFaces) {
 		// Flatten vertex array into a Float32Array for BufferGeometry
 		const positions = new Float32Array(vertices.length * 3);
 		for (let i = 0; i < vertices.length; i++) {
@@ -321,7 +261,7 @@ export function init(container) {
 		// Visible faces mesh — uses original-style material
 		const visibleGeom = new THREE_ref.BufferGeometry();
 		visibleGeom.setAttribute('position', new THREE_ref.BufferAttribute(positions, 3));
-		visibleGeom.setIndex(visibleFaces);
+		visibleGeom.setIndex(visibleFaces.flat());
 		visibleGeom.computeVertexNormals();
 
 		const visibleMaterial = new THREE_ref.MeshPhongMaterial({
@@ -337,7 +277,7 @@ export function init(container) {
 		// Culled faces mesh — red and transparent
 		const culledGeom = new THREE_ref.BufferGeometry();
 		culledGeom.setAttribute('position', new THREE_ref.BufferAttribute(positions, 3));
-		culledGeom.setIndex(culledFaces);
+		culledGeom.setIndex(culledFaces.flat());
 		culledGeom.computeVertexNormals();
 
 		const culledMaterial = new THREE_ref.MeshBasicMaterial({
@@ -352,11 +292,30 @@ export function init(container) {
 		culledMesh.name = originalMesh.name + 'Culled';
 		culledMesh.visible = showCullFaces;
 
-		// Wireframe overlays for both, matching existing pattern
+		// Occluded faces mesh — purple and transparent
+		const occludedGeom = new THREE_ref.BufferGeometry();
+		occludedGeom.setAttribute('position', new THREE_ref.BufferAttribute(positions, 3));
+		occludedGeom.setIndex(occludedFaces.flat());
+		occludedGeom.computeVertexNormals();
+
+		const occludedMaterial = new THREE_ref.MeshBasicMaterial({
+			color: 0x9B5DE5,
+			transparent: true,
+			opacity: 0.55,
+			side: THREE_ref.DoubleSide,
+			depthWrite: false,
+		});
+
+		const occludedMesh = new THREE_ref.Mesh(occludedGeom, occludedMaterial);
+		occludedMesh.name = originalMesh.name + 'Occluded';
+		occludedMesh.visible = showOccludedFaces;
+
+		// Wireframe overlays for all three, matching existing pattern
 		visibleMesh.add(createWireframeForMesh(visibleMesh));
 		culledMesh.add(createWireframeForMesh(culledMesh));
+		occludedMesh.add(createWireframeForMesh(occludedMesh));
 
-		return [visibleMesh, culledMesh];
+		return [visibleMesh, culledMesh, occludedMesh];
 	}
 
 
@@ -406,6 +365,15 @@ export function init(container) {
 		});
 	}
 	
+	function updateOccludedVisibility() {
+		if (!globalMeshGroup) return;
+		globalMeshGroup.traverse(child => {
+			if (child.isMesh && child.name.endsWith('Occluded')) {
+				child.visible = showOccludedFaces;
+			}
+		});
+	}
+
 	function showError(msg) {
 		const err = document.createElement('div');
 		err.style.cssText = errorCSS;
