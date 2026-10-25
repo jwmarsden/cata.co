@@ -251,14 +251,12 @@ The following scene runs the back-face cull and then the occlusion cull (method 
 
 ![[scene:working-cull-ortho]]{Occlusion Cull Processing}
 
-The two methods were timed on the same meshes (Node.js 24 on a 12" MacBook, an Intel Core i5-7Y54):
+The two methods were timed on the same meshes (Node.js 24 on a Intel Core i5-7Y54):
 
 | Mesh | Faces | Back faces | Occluded | Visible | Method one | Method two |
 |---|---:|---:|---:|---:|---:|---:|
 | Utah Teapot | 6,320 | 2,797 | 369 | 3,154 | 1,352 ms | 88 ms |
 | XYZ RGB Dragon | 249,882 | 117,859 | 29,245 | 102,778 | about 30 min[^estimate] | 760 ms |
-
-Both methods produced identical face sets on the teapot, and on a 6,000-face sample of the dragon.
 
 [^estimate]: Estimated from the teapot: method one grows with the square of the number of forward-facing faces, and the dragon has about 37 times as many (132,023 against 3,523), so roughly $1{,}352\text{ ms} \times 37.5^2$.
 
