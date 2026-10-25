@@ -77,16 +77,8 @@ The bucket is shared between my local environment and production, which means an
 
 Because I am so busy in all dimensions of my life, I have kicked my note taking in Obsidian back into gear.
 
-My vault is laid out as a mix of [PARA](https://fortelabs.com/blog/para/) and a [Zettelkasten](https://zettelkasten.de/introduction/): numbered folders for a map, a journal, projects, areas, resources, fleeting and permanent notes, and an archive. The permanent notes are the biggest pile by far, at over three hundred.
+My vault is laid out as a mix of [PARA](https://fortelabs.com/blog/para/) and a [Zettelkasten](https://zettelkasten.de/introduction/) but they continue to evolve even tho I have been working in there for a couple of years. 
 
-What I have working:
-
-1. **Journals.** [Journals](https://obsidian.md/plugins?id=journals) gives me a daily and a weekly note, each started from a template.
-1. **Templates.** [Templater](https://obsidian.md/plugins?id=templater-obsidian) fills in templates for meetings, people, projects and tasks, so every new note starts with the same properties.
-1. **Tasks.** [TaskNotes](https://obsidian.md/plugins?id=tasknotes) keeps each task as its own note, so tasks link to the projects and people they belong to.
-1. **Live views.** [Dataview](https://obsidian.md/plugins?id=dataview) builds the lists and tables across the vault, around a hundred notes use it, and [Meta Bind](https://obsidian.md/plugins?id=obsidian-meta-bind-plugin) shows and edits a note's properties inline.
-1. **Housekeeping.** [Tag Wrangler](https://obsidian.md/plugins?id=tag-wrangler) for renaming and merging tags, and a plugin that stamps the time a note was last edited.
-
-It also closes the loop with this site. Posts here are plain Markdown, as I said in [Hello World](/posts/202605/hello-world) and they move between the vault and the site without any conversion. Everything else on the topic sits under [#obsidian](/tag/obsidian), and the machine stuff under [#salvage](/tag/salvage) and [#nixos](/tag/nixos).
+My notes and this site are plain Markdown, as I said in [Hello World](/posts/202605/hello-world) and they move between the vault and the site without any conversion. 
 
 🐟
