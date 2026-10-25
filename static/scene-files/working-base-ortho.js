@@ -226,7 +226,7 @@ export function init(container) {
 			return new Promise((resolve) => {
 				const loader = new OBJLoader();
 				loader.load(
-					'/api/proxy?url=https://graphics.stanford.edu/~mdfisher/Data/Meshes/bunny.obj',
+					'/models/stanford-bunny.obj',
 					(bunnyGroup) => {
 						bunnyGroup.name = 'BunnyGroup';
 

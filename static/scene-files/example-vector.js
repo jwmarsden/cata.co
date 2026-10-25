@@ -209,7 +209,7 @@ export function init(container) {
 
 			const loader = new OBJLoader();
 			loader.load(
-				'/api/proxy?url=https://graphics.stanford.edu/~mdfisher/Data/Meshes/bunny.obj',
+				'/models/stanford-bunny.obj',
 				(obj) => {
 					obj.rotation.y = +Math.PI / 4;
 

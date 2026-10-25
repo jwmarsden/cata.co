@@ -92,7 +92,7 @@ The input geometry being used for this implementation are the [Utah Teapot](http
 
 [^utah-teapot]:The Utah Teapot rendered here is available in [three.js](https://threejs.org/). The documents for it are [here](https://threejs.org/docs/#TeapotGeometry). 
 
-[^stanford-bunny]:The Stanford Bunny is being loaded in the browser from [Stanford](https://graphics.stanford.edu/~mdfisher/Data/Meshes/bunny.obj)
+[^stanford-bunny]:The Stanford Bunny (`bun_zipper`, 35,947 vertices and 69,451 faces) from the [Stanford 3D Scanning Repository](https://graphics.stanford.edu/data/3Dscanrep/), served from this site.
 
 [^XYZ-RGB-dragon]:The Standford Dragon is being loaded in the browser from [GitHub](https://github.com/alecjacobson/common-3d-test-models/blob/master/data/xyzrgb_dragon.obj)
 

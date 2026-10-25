@@ -97,6 +97,8 @@ marked.use({
 						title="${token.caption || token.name}"
 						style="width:100%;height:${height}px;border:none;border-radius:0.5rem;display:block;"
 						loading="lazy"
+						allow="fullscreen"
+						allowfullscreen
 					></iframe>
 					${token.caption ? `<p style="text-align:center;font-size:0.85rem;color:#5A7A8A;margin-top:0.5rem;">${token.caption}</p>` : ''}
 				</div>
