@@ -42,7 +42,11 @@ This now allows me to move onto the next step of the article flow.
 
 ## Salvage Details
 
-I am finally reusing Salvage. Salvage is a [12" MacBook](https://en.wikipedia.org/wiki/MacBook_(12-inch)) from 2017: fanless, a 4.5 watt Core i5 and 8 GB of memory. Apple stopped updating macOS a few versions ago, so it now runs [NixOS](https://nixos.org/) with the [Sway](https://swaywm.org/) tiling window manager. I was trying to use X based distro's up until now and I have always been unhappy with the result. [NixOS](https://nixos.org/) is awesome and the [Claude Code](https://www.anthropic.com/claude-code) has been excellent at working through the problems. The whole machine is one declarative configuration in a public repo, [jwmarsden/Salvage](https://github.com/jwmarsden/Salvage), with a [README](https://github.com/jwmarsden/Salvage#salvage) covering what it is and what is on it. 
+I am finally reusing Salvage. Salvage is a [12" MacBook](https://en.wikipedia.org/wiki/MacBook_(12-inch)) from 2017: fanless, a 4.5 watt Core i5 and 8 GB of memory. Apple stopped updating macOS a few versions ago, so it now runs [NixOS](https://nixos.org/) with the [Sway](https://swaywm.org/) tiling window manager. I was trying to use X based distro's up until now and I have always been unhappy with the result. [NixOS](https://nixos.org/) is awesome and [Claude Code](https://www.anthropic.com/claude-code) has been amazing at working through the hardware problems. It is at the point that its the nicest linux configuration I have ever used. 
+
+![[image:858e82cd-ea08-430f-8bae-4b3b82fac0bd]] {Salvage Desktop 202610}
+
+The whole machine is one declarative configuration in a public repo, [jwmarsden/Salvage](https://github.com/jwmarsden/Salvage), with a [README](https://github.com/jwmarsden/Salvage#salvage) covering what it is and what is on it. 
 
 The coolest bits are the hardware fixes, since Linux on this model is not meant to be easy:
 
