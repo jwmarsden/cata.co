@@ -21,7 +21,9 @@ export async function GET({ params }) {
 	return new Response(code, {
 		headers: {
 			'Content-Type': 'application/javascript',
-			'Cache-Control': 'public, max-age=3600',
+			// revalidate every load, like the scene scripts: a scene and its
+			// library change together, and a stale library breaks its imports
+			'Cache-Control': 'no-cache',
 		},
 	});
 }

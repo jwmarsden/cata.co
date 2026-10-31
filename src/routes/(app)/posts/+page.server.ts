@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
+import { isHidden } from '$lib/server/drafts';
 
 function getFilesRecursively(baseDirectory: string, extension?: string, fileDirectory: string = ''): string[] {
 	const filePath = path.join(baseDirectory, fileDirectory);
@@ -27,16 +28,17 @@ export async function load() {
 	const postsDir = path.resolve('src/posts');
 	const files = getFilesRecursively(postsDir, '.md');
 
-	const posts = files.map(filename => {
+	const posts = files.flatMap(filename => {
 		const raw = fs.readFileSync(path.join(postsDir, filename), 'utf-8');
 		
 		const { data } = matter(raw);
-		return {
+		if (isHidden(data)) return [];
+		return [{
 			slug: filename.replace('.md', ''),
 			title: data.title ?? 'Untitled',
 			date: data.date ? new Date(data.date).toISOString() : null,
 			excerpt: data.excerpt ?? '',
-		};
+		}];
 	});
 
 	// Sort newest first

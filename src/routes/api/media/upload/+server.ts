@@ -6,10 +6,11 @@ import { db } from '$lib/server/db';
 import { media } from '$lib/server/db/schema';
 import { generateImageThumbnail, generateEmbedVariant, generateLightboxVariant, getImageDimensions } from '$lib/server/bucket/thumbnail';
 import { syncMediaTagsToRedis } from '$lib/server/tags/tag-sync';
+import { requireAdmin } from '$lib/server/admin';
 
 export async function POST({ request, locals }) {
 	const session = await locals.auth();
-	if (!session?.user) error(401, 'Unauthorized');
+	requireAdmin(session);
 
 	const formData = await request.formData();
 	const file = formData.get('file') as File;

@@ -11,6 +11,15 @@
 	let selectedTemplate = $state('rotating-cube');
 	let creating = $state(false);
 	let error = $state('');
+	let copied = $state('');
+
+	const sortedScenes = $derived([...data.scenes].sort((a, b) => a.name.localeCompare(b.name)));
+
+	async function copyDirective(name: string) {
+		await navigator.clipboard.writeText(`![[scene:${name}]]`);
+		copied = name;
+		setTimeout(() => { if (copied === name) copied = ''; }, 1500);
+	}
 
 	async function createScene() {
 		if (!newName.trim()) return;
@@ -93,45 +102,56 @@
 		{#if data.scenes.length === 0}
 			<p class="text-text-muted">No scenes yet — create one above.</p>
 		{:else}
-			<h2 class="text-xl font-bold text-ocean mb-4">Existing scenes</h2>
-			<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-				{#each data.scenes as scene}
-					<div class="card bg-white border border-mist-dark hover:border-amber transition-colors">
-						<div class="card-body py-4">
-							<div class="flex items-center justify-between mb-1">
-								<h3 class="font-semibold text-ocean">{scene.name}</h3>
-								<span class="badge badge-xs border-none {scene.source === 'bucket' ? 'bg-amber text-ocean' : 'bg-mist text-ocean'}">
+			<h2 class="text-xl font-bold text-ocean mb-4">Existing scenes <span class="text-sm font-normal text-text-muted">({data.scenes.length})</span></h2>
+			<!-- One row per scene: name and directive on the left, actions on the right;
+			     on narrow screens the actions drop below -->
+			<ul class="border border-mist-dark rounded-xl bg-white divide-y divide-mist-dark overflow-hidden">
+				{#each sortedScenes as scene (scene.name)}
+					<li class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-4 py-3 hover:bg-mist/40 transition-colors">
+						<div class="min-w-0 flex-1">
+							<div class="flex items-center gap-2 min-w-0">
+								<a href="/admin/scenes/{scene.name}" class="font-semibold text-ocean no-underline hover:text-amber break-all" title={scene.name}>
+									{scene.name}
+								</a>
+								<span class="badge badge-xs border-none shrink-0 {scene.source === 'bucket' ? 'bg-amber text-ocean' : 'bg-mist text-ocean'}">
 									{scene.source === 'bucket' ? '☁ bucket' : '📁 static'}
 								</span>
 							</div>
-							<p class="text-xs text-text-muted font-mono mt-1 mb-3">![[scene:{scene.name}]]</p>
-							<div class="flex gap-2">
-								<a
-									href="/admin/scenes/{scene.name}"
-									class="btn btn-xs bg-ocean text-mist border-none hover:bg-ocean/80 no-underline flex-1 text-center"
-								>
-									Edit
-								</a>
-								<a
-									href="/scenes/{scene.name}"
-									target="_blank"
-									class="btn btn-xs border-mist-dark bg-transparent hover:bg-mist text-ocean no-underline flex-1 text-center"
-								>
-									Preview ↗
-								</a>
-								{#if scene.source === 'bucket'}
-									<button
-										class="btn btn-xs border-mist-dark bg-transparent hover:bg-error/10 hover:text-error hover:border-error/30 text-ocean"
-										onclick={() => deleteScene(scene.name)}
-									>
-										✕
-									</button>
-								{/if}
-							</div>
+							<button
+								class="mt-1 text-xs text-text-muted font-mono hover:text-ocean break-all text-left cursor-pointer"
+								title="Copy the embed directive"
+								onclick={() => copyDirective(scene.name)}
+							>
+								![[scene:{scene.name}]] <span class="font-sans">{copied === scene.name ? '✓ copied' : '⧉'}</span>
+							</button>
 						</div>
-					</div>
+						<div class="flex gap-2 shrink-0">
+							<a
+								href="/admin/scenes/{scene.name}"
+								class="btn btn-xs bg-ocean text-mist border-none hover:bg-ocean/80 no-underline"
+							>
+								Edit
+							</a>
+							<a
+								href="/scenes/{scene.name}"
+								target="_blank"
+								class="btn btn-xs border-mist-dark bg-transparent hover:bg-mist text-ocean no-underline"
+							>
+								Preview ↗
+							</a>
+							{#if scene.source === 'bucket'}
+								<button
+									class="btn btn-xs border-mist-dark bg-transparent hover:bg-error/10 hover:text-error hover:border-error/30 text-ocean"
+									title="Delete {scene.name}"
+									onclick={() => deleteScene(scene.name)}
+								>
+									✕
+								</button>
+							{/if}
+						</div>
+					</li>
 				{/each}
-			</div>
+			</ul>
 		{/if}
 	</div>
 </section>

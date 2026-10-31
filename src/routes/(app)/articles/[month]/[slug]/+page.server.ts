@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
+import { isHidden } from '$lib/server/drafts';
 import { marked, extractToc } from '$lib/server/articles/markdown';
 import { error } from '@sveltejs/kit';
 
@@ -13,6 +14,9 @@ export async function load({ params }) {
 
 	const raw = fs.readFileSync(filePath, 'utf-8');
 	const { data, content } = matter(raw);
+	if (isHidden(data)) {
+		error(404, 'Article not found');
+	}
 	const html = await marked(content);
 
 	// Use frontmatter TOC if provided, otherwise auto-generate

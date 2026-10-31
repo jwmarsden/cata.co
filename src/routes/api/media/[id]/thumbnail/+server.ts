@@ -6,10 +6,11 @@ import { redirect, error } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { media } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
+import { requireAdmin } from '$lib/server/admin';
 
 export async function GET({ params, locals }) {
 	const session = await locals.auth();
-	if (!session?.user) error(401, 'Unauthorized');
+	requireAdmin(session);
 
 	const file = await db.select().from(media).where(eq(media.id, params.id)).limit(1);
 	if (!file.length) error(404, 'Not found');

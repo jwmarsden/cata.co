@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
+import { isHidden } from '$lib/server/drafts';
 
 import { db } from '$lib/server/db';
 import { media } from '$lib/server/db/schema';
@@ -41,18 +42,19 @@ export async function syncPostTagsToRedis(): Promise<void> {
     const files = getFilesRecursively(postsDir, '.md');
     let tags: { [key: string]: number } = {};
 
-    const posts = files.map(filename => {
+    const posts = files.flatMap(filename => {
         const raw = fs.readFileSync(path.join(postsDir, filename), 'utf-8');
         
         const { data } = matter(raw);
-        return {
+        if (isHidden(data)) return [];
+        return [{
             slug: filename.replace('.md', '').replace(/\\/g, '/'),
             title: data.title ?? 'Untitled',
             date: data.date ? new Date(data.date).toISOString() : null,
             excerpt: data.excerpt ?? '',
             tags: data.tags ?? [],
             author: data.author ?? 'Unknown',
-        };
+        }];
     });
 
     for (const post of posts) {
@@ -119,18 +121,19 @@ export async function syncArticleTagsToRedis(): Promise<void> {
     let tags: { [key: string]: number } = {};
 
 
-    const articles = files.map(filename => {
+    const articles = files.flatMap(filename => {
             const raw = fs.readFileSync(path.join(articlesDir, filename), 'utf-8');
             
             const { data } = matter(raw);
-            return {
+            if (isHidden(data)) return [];
+            return [{
                 slug: filename.replace('.md', '').replace(/\\/g, '/'),
                 title: data.title ?? 'Untitled',
                 date: data.date ? new Date(data.date).toISOString() : null,
                 excerpt: data.excerpt ?? '',
                 tags: data.tags ?? [],
                 author: data.author ?? 'Unknown',
-            };
+            }];
         });
 
     for (const article of articles) {

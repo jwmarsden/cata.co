@@ -82,7 +82,7 @@ The processing complexity is $O(n)$ as it is a linear function $\vert{}n\vert{}=
 
 ## Implementation
 
-The following section is a backface culling implementation using [three.js](https://threejs.org/).
+The following section is a backface culling implementation using [three.js](https://threejs.org/). Each listing is pulled from [`culling.js`](/api/scenes/lib/culling.js), the module the scene at the end of the article runs, so the code shown is the code doing the work. The same module carries on into [Occlusion culling](/articles/graphics/occlusion-culling).
 
 ### Input Geometry
 
@@ -104,110 +104,37 @@ The following section provides a Javascript implementation of the operations req
 
 The following code provides an implementation for vector subtraction. 
 
-```javascript
-// Subtracts vector b from vector a, component by component.
-// Expects both a and b to be 3‑element arrays: [x, y, z].
-// Returns a new 3‑element array representing the difference.
-function subtract(a, b) {
-    return [
-        a[0] - b[0], // x component
-        a[1] - b[1], // y component
-        a[2] - b[2]  // z component
-    ];
-}
-```
+![[code:culling#subtract]]
 
 #### Vector Normalisation
 
 The following code provides an implementation for vector normalisation. As an Australian, I have decided to write this article using my native spelling but I continue to code using American spelling. 
 
-```javascript
-// Returns a new vector pointing in the same direction but with unit length.
-// If the vector has zero length, returns [0, 0, 0] to avoid division by zero.
-function normalize(v) {
-    // Compute the Euclidean length (magnitude) of the vector
-    const len = Math.sqrt(
-        Math.pow(v[0], 2) + 
-        Math.pow(v[1], 2) + 
-        Math.pow(v[2], 2)
-    );
-
-    // If length is non-zero, divide each component by the length
-    return len > 0
-        ? [v[0] / len, v[1] / len, v[2] / len]
-        : [0, 0, 0]; // Zero vector stays zero
-}
-```
+![[code:culling#normalize]]
 
 #### Vector Cross Product
 
 The following code provides an implementation for [vector cross product](#cross-product). 
 
-```javascript
-// Computes the cross product of two vectors a and b.
-// The result is a vector perpendicular to both a and b 
-// following the right‑hand rule.
-function crossProduct(a, b) {
-    return [
-        a[1] * b[2] - a[2] * b[1], // x component
-        a[2] * b[0] - a[0] * b[2], // y component
-        a[0] * b[1] - a[1] * b[0], // z component
-    ];
-}
-```
+![[code:culling#crossProduct]]
 
 #### Vector Dot Product
 
 The following code provides an implementation for [vector dot product](#dot-product). 
 
-```javascript
-// Computes the dot product of two vectors a and b.
-function dotProduct(a, b) {
-    return (a[0] * b[0]) +
-           (a[1] * b[1]) +
-           (a[2] * b[2]);
-}
-```
+![[code:culling#dotProduct]]
+
+#### Mesh Geometry
+
+The following code reads the vertex set $V$ and face set $F$ of the [mesh](#mesh-definition) out of a three.js mesh, as plain arrays.
+
+![[code:culling#extractGeometry]]
 
 #### Mesh Back-face Cull Based on View Vector
 
-The following code provides an implementation for the [back-face cull algorithm](#algorithm-formalisation). 
+The following code provides an implementation for the [back-face cull algorithm](#algorithm-formalisation). It returns the two face sets, the forward-facing faces $F_{f}$ and the backward-facing faces $F_{b}$, which the scene then draws. A face seen exactly edge-on ($z = 0$) is kept with the forward-facing faces.
 
-```javascript
-// Performs back-face culling on a mesh using a view direction vector `v_view`.
-// Faces whose normals point toward the viewer are marked visible;
-function doBackfaceCull(v_view, originalMesh) {
-    // Extract vertex set (vSet) and face index set (fSet)
-    const { vSet, fSet } = extractGeometry(originalMesh);
-    const visibleFaces = []; // indices of faces facing the viewer
-    const culledFaces  = []; // indices of faces facing away
-    for (const f of fSet) {
-        // Retrieve the 3 vertices of the face
-        const { v1, v2, v3 } = {
-            v1: vSet[f[0]],
-            v2: vSet[f[1]],
-            v3: vSet[f[2]]
-        };
-        // Compute edge vectors of the face
-        const e1 = subtract(v2, v1);
-        const e2 = subtract(v3, v1);
-        // Compute face normal via cross product
-        const e1xe2 = crossProduct(e1, e2);
-        // Normalize the normal vector
-        const e1xe2Normal = normalize(e1xe2);
-        // Dot product with view vector determines orientation
-        const z = dotProduct(e1xe2Normal, v_view);
-        // If the face normal points toward the viewer, keep it
-        if (z >= 0) {
-            visibleFaces.push(...f);
-        } else {
-            culledFaces.push(...f);
-        }
-    }
-    // Build two meshes: visible faces and culled faces
-    return buildCullMeshes(originalMesh, vSet, visibleFaces, culledFaces);
-}
-```
+![[code:culling#doBackfaceCull]]
 
 ### Cull Operation Result
 

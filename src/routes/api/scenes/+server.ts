@@ -4,6 +4,7 @@ import { json, error } from '@sveltejs/kit';
 import { s3 } from '$lib/server/bucket/s3';
 import { PutObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
 import { BUCKET_NAME } from '$env/static/private';
+import { requireAdmin } from '$lib/server/admin';
 
 const STATIC_SCENES_DIR = path.resolve('static/scene-files');
 const BUCKET_PREFIX = 'scenes/';
@@ -47,7 +48,7 @@ export function init(container) {
 
 export async function GET({ locals }) {
 	const session = await locals.auth();
-	if (!session?.user) error(401, 'Unauthorized');
+	requireAdmin(session);
 
 	const staticScenes = fs.existsSync(STATIC_SCENES_DIR)
 		? fs.readdirSync(STATIC_SCENES_DIR)
@@ -80,7 +81,7 @@ export async function GET({ locals }) {
 
 export async function POST({ request, locals }) {
 	const session = await locals.auth();
-	if (!session?.user) error(401, 'Unauthorized');
+	requireAdmin(session);
 
 	const { name, template } = await request.json();
 	if (!name || !/^[a-z0-9-]+$/.test(name)) {
@@ -107,7 +108,7 @@ export async function POST({ request, locals }) {
 
 export async function PUT({ request, locals }) {
 	const session = await locals.auth();
-	if (!session?.user) error(401, 'Unauthorized');
+	requireAdmin(session);
 
 	const { name, code } = await request.json();
 	if (!name || !code) error(400, 'Name and code required');

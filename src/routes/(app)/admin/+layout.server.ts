@@ -1,4 +1,5 @@
 import { redirect } from '@sveltejs/kit';
+import { requireAdminPage } from '$lib/server/admin';
 
 export async function load({ locals, url }) {
 	// Don't protect the login page
@@ -7,9 +8,7 @@ export async function load({ locals, url }) {
 	}
 
 	const session = await locals.auth();
-	if (!session?.user) {
-		redirect(303, '/admin/login');
-	}
+	requireAdminPage(session);
 
 	return { session };
 }

@@ -1,0 +1,24 @@
+/* MooMoo in a web page (with frontend/style.css): the page fills its root,
+   the worlds are fixed (no Worlds… button), and SMud graphics are panels. */
+.moomoo-web { position: fixed; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+.moomoo-web #worlds, .moomoo-web #worldsDialog { display: none; }
+
+.smudpanel {
+  position: fixed; display: flex; flex-direction: column;
+  background: #d8e9ec; border: 1px solid #7a9cc6; border-radius: 6px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .45); overflow: hidden;
+}
+.smudpanel > header {
+  display: flex; align-items: center; gap: 8px; padding: 3px 4px 3px 10px; border-bottom: 0;
+  background: #7a9cc6; color: #10213a; font: 13px system-ui, sans-serif;
+  cursor: move; user-select: none; touch-action: none;
+}
+.smudpanel > header .title { flex: 1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.smudpanel > header button {
+  border: 0; background: transparent; color: inherit; font-size: 18px; line-height: 1;
+  padding: 0 6px; cursor: pointer; border-radius: 4px;
+}
+.smudpanel > header button:hover { background: rgba(255, 255, 255, .35); }
+.smudpanel > .body { display: flex; resize: both; overflow: hidden; min-width: 120px; min-height: 80px; }
+.smudpanel .smud { flex: 1; }
+.smudpanel .smudbar { display: none; }

@@ -5,6 +5,7 @@ import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { BUCKET_NAME } from '$env/static/private';
 import { json, error } from '@sveltejs/kit';
 import { DeleteObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
+import { requireAdmin } from '$lib/server/admin';
 
 const STATIC_DIR = path.resolve('static/scene-files');
 const BUCKET_PREFIX = 'scenes/';
@@ -55,7 +56,7 @@ export async function GET({ params }) {
 
 export async function DELETE({ params, locals }) {
 	const session = await locals.auth();
-	if (!session?.user) error(401, 'Unauthorized');
+	requireAdmin(session);
 
 	const { name } = params;
 

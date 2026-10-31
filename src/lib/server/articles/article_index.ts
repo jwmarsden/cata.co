@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
+import { isHidden } from '$lib/server/drafts';
 
 export interface ArticleIndex {
 	slug: string;
@@ -30,6 +31,7 @@ export async function index_articles(): Promise<void> {
 		for (const filename of files) {
 			const raw = fs.readFileSync(path.join(monthDir, filename), 'utf-8');
 			const { data } = matter(raw);
+			if (isHidden(data)) continue;
 			const slug = filename.replace('.md', '');
 			console.log(`Indexed article: ${month}/${slug} - ${data.title}`);
 			index.push({

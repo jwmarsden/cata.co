@@ -3,10 +3,11 @@ import { db } from '$lib/server/db';
 import { media } from '$lib/server/db/schema';
 import { desc } from 'drizzle-orm';
 import { getAllTags } from '$lib/server/tags/tag-controller';
+import { requireAdmin } from '$lib/server/admin';
 
 export async function GET({ locals }) {
 	const session = await locals.auth();
-	if (!session?.user) error(401, 'Unauthorized');
+	requireAdmin(session);
 
 	const files = await db.select().from(media).orderBy(desc(media.uploadedAt));
 	const tags = await getAllTags();

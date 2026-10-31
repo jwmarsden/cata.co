@@ -4,6 +4,8 @@ import { redirect } from '@sveltejs/kit';
 import type { Handle, ServerInit } from '@sveltejs/kit';
 import { truncateTags, syncPostTagsToRedis, syncMediaTagsToRedis, syncArticleTagsToRedis } from '$lib/server/tags/tag-sync';
 import { index_articles } from '$lib/server/articles/article_index';
+import { requireAdminPage } from '$lib/server/admin';
+import { PUBLIC_BASE_URL } from '$env/static/public';
 
 export const init: ServerInit = async () => {
 	await truncateTags().catch(err => {
@@ -45,17 +47,25 @@ const securityHeaders: Handle = async ({ event, resolve }) => {
 };
 
 
+// moo.cata.co is MooMoo: the page lives here, where the sign-in cookie does.
+const mooHost: Handle = async ({ event, resolve }) => {
+	// the Host header, not event.url: with ORIGIN set, adapter-node builds the url from that
+	const host = event.request.headers.get('x-forwarded-host') ?? event.request.headers.get('host') ?? '';
+	if (host.startsWith('moo.')) {
+		redirect(308, `${PUBLIC_BASE_URL}/moo`);
+	}
+	return resolve(event);
+};
+
 const adminGuard: Handle = async ({ event, resolve }) => {
 	if (event.url.pathname.startsWith('/admin')) {
 		if (event.url.pathname.startsWith('/admin/login')) {
 			return resolve(event);
 		}
 		const session = await event.locals.auth();
-		if (!session?.user) {
-			redirect(303, '/admin/login');
-		}
+		requireAdminPage(session);
 	}
 	return resolve(event);
 };
 
-export const handle = sequence(authHandle, adminGuard, securityHeaders);
+export const handle = sequence(mooHost, authHandle, adminGuard, securityHeaders);
