@@ -3,6 +3,7 @@
 // players type their own connect line, password and all, every time.
 export const MOO_WORLDS = [
 	{ name: 'Rupert', host: 'rupert.twyst.org', port: 9040, smud: true },
+	{ name: 'LambdaMoo', host: 'lambda.moo.mud.org', port: 8888, smud: false },
 ];
 
 /** @param {unknown} name */

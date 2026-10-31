@@ -49,7 +49,7 @@
 {:else}
 	<main class="moo-signin">
 		<h1>MooMoo</h1>
-		<p>A MOO client, with SMud graphics. Sign in with GitHub to use it.</p>
+		<p>A MOO client, with SMud graphics. Sign in with GitHub to use it (nothing is done with your github, but if my server is going to make a connection its going to know who you are).</p>
 		<button onclick={() => signIn('github', { callbackUrl: '/moo' })}>Sign in with GitHub</button>
 		<p><a href={resolve('/')} data-sveltekit-reload>cata.co</a></p>
 	</main>

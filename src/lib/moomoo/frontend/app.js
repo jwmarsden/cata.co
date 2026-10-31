@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { highlightMoo, plain } from './moo.js';
-import { ansiToHtml, linkText } from './ansi.js';
+import { ansiToHtml, colourText, plainText, linkText } from './ansi.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g,
@@ -463,7 +463,7 @@ async function openObject(obj) {
   activate(t);
   try {
     t.data = await call('inspect', { obj });
-    t.name = `${t.data.name} (${obj})`;
+    t.name = `${plainText(t.data.name)} (${obj})`;
     t.error = null;
   } catch (e) {
     t.error = String(e.message ?? e);
@@ -476,6 +476,12 @@ async function openObject(obj) {
 const objLink = (o, label) => /^#\d+$/.test(o)
   ? `<a href="#" data-obj="${esc(o)}">${esc(label ? `${label} (${o})` : o)}</a>`
   : esc(label ? `${label} (${o})` : o);
+
+// The same in the object's header, with the name's colours.
+const objLinkColour = (o, label) => {
+  const html = label ? `${colourText(label, { links: false })} (${esc(o)})` : esc(o);
+  return /^#\d+$/.test(o) ? `<a href="#" data-obj="${esc(o)}">${html}</a>` : html;
+};
 
 // Properties or verbs, grouped by the object that defines them: its own
 // first, open; inherited ones collapsed.
@@ -494,7 +500,7 @@ function groups(t, items, row, head) {
 
 function renderObject(t) {
   const v = $('objview');
-  const head = `<div class="objhead"><h1>${esc(t.data?.name ?? t.obj)} <span class="objnum">${esc(t.obj)}</span></h1>` +
+  const head = `<div class="objhead"><h1>${t.data?.name != null ? colourText(t.data.name, { links: false }) : esc(t.obj)} <span class="objnum">${esc(t.obj)}</span></h1>` +
     `<button id="objRefresh"${t.loading ? ' disabled' : ''}>${t.loading ? 'Reading…' : 'Refresh'}</button></div>`;
   if (!t.data) {
     v.innerHTML = head + `<p class="${t.error ? 'objerr' : 'dim'}">${esc(t.error ?? 'Reading the object…')}</p>`;
@@ -509,12 +515,12 @@ function renderObject(t) {
   v.innerHTML = head + (t.error ? `<p class="objerr">${esc(t.error)}</p>` : '') +
     `<div class="chips">${flags}</div>` +
     `<dl class="meta">` +
-    `<dt>Parent</dt><dd>${objLink(d.parent, parentName)}</dd>` +
-    `<dt>Owner</dt><dd>${objLink(d.owner, d.ownerName)}</dd>` +
-    `<dt>Location</dt><dd>${objLink(d.location, d.locationName)}</dd>` +
-    `<dt>Ancestry</dt><dd>${d.ancestors.map((a) => objLink(a.obj, a.name)).join(' → ') || 'none'}</dd>` +
+    `<dt>Parent</dt><dd>${objLinkColour(d.parent, parentName)}</dd>` +
+    `<dt>Owner</dt><dd>${objLinkColour(d.owner, d.ownerName)}</dd>` +
+    `<dt>Location</dt><dd>${objLinkColour(d.location, d.locationName)}</dd>` +
+    `<dt>Ancestry</dt><dd>${d.ancestors.map((a) => objLinkColour(a.obj, a.name)).join(' → ') || 'none'}</dd>` +
     `<dt>Children / contents</dt><dd>${d.children} / ${d.contents}</dd></dl>` +
-    `<h2>Description</h2><div class="desc">${d.description.length ? d.description.map(linkText).join('<br>') : '<span class="dim">none</span>'}</div>` +
+    `<h2>Description</h2><div class="desc">${d.description.length ? d.description.map((l) => colourText(l)).join('<br>') : '<span class="dim">none</span>'}</div>` +
     (d.notes.length ? `<p class="objerr">${d.notes.map(esc).join('<br>')}</p>` : '') +
     `<h2>Properties <span class="count">${ownProps} here, ${d.properties.length} in all</span></h2>` +
     groups(t, d.properties, (p) =>

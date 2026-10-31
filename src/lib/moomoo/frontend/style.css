@@ -88,6 +88,9 @@ main { flex: 1; display: flex; min-height: 0; }
 
 /* ANSI */
 .b { font-weight: bold; } .u { text-decoration: underline; }
+.blink { animation: moo-blink 1s steps(1) infinite; }
+@keyframes moo-blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .blink { animation: none; text-decoration: underline dotted; } }
 .c0 { color: #414868; } .c1 { color: var(--red); } .c2 { color: var(--green); } .c3 { color: var(--yellow); }
 .c4 { color: var(--blue); } .c5 { color: var(--magenta); } .c6 { color: var(--cyan); } .c7 { color: var(--fg); }
 .c8 { color: var(--dim); } .c9 { color: #ff7a93; } .c10 { color: #b9f27c; } .c11 { color: #ff9e64; }
@@ -147,6 +150,8 @@ main { flex: 1; display: flex; min-height: 0; }
 #hl .ln::before {
   content: attr(data-n); position: absolute; right: calc(100% + 12px + 10px);
   color: var(--dim); user-select: none;
+  /* not the code's overflow-wrap: anywhere, which broke "10" into "1" over "0" */
+  white-space: nowrap; overflow-wrap: normal;
 }
 #hl .ln.bad::before { color: var(--red); font-weight: 700; content: "▸" attr(data-n); }
 #hl .ln.bad { background: rgba(247, 118, 142, .12); }
