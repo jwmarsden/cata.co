@@ -1,5 +1,5 @@
 // @ts-nocheck
-// MooMoo's session, whatever it runs in: one MOO connection at a time, MCP
+// moocat's session, whatever it runs in: one MOO connection at a time, MCP
 // local editing, object inspection and SMud graphics. The host (main.js for
 // the tinyjs app, src/web/web.js for a web page) gives it a way to connect
 // and somewhere to put things, and it pushes to the page:

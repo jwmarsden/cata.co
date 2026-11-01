@@ -1,7 +1,7 @@
-/* MooMoo in a web page (with frontend/style.css): the page fills its root,
+/* moocat in a web page (with frontend/style.css): the page fills its root,
    the worlds are fixed (no Worlds… button), and SMud graphics are panels. */
-.moomoo-web { position: fixed; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
-.moomoo-web #worlds, .moomoo-web #worldsDialog { display: none; }
+.moocat-web { position: fixed; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+.moocat-web #worlds, .moocat-web #worldsDialog { display: none; }
 
 .smudpanel {
   position: fixed; display: flex; flex-direction: column;

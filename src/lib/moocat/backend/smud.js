@@ -21,7 +21,7 @@
 
 import { parseLiteral } from './inspect.js';
 
-export const HELLO = '#$# client: SMud version: 1.0b3p3-MooMoo release: 40';
+export const HELLO = '#$# client: SMud version: 1.0b3p3-moocat release: 40';
 
 // keys whose value runs to the end of the line (they may hold spaces)
 const REST = new Set(['macro', 'name', 'text', 'settext', 'clickmacro', 'doubleclickmacro',

@@ -47,7 +47,7 @@ const securityHeaders: Handle = async ({ event, resolve }) => {
 };
 
 
-// moo.cata.co is MooMoo: the page lives here, where the sign-in cookie does.
+// moo.cata.co is moocat: the page lives here, where the sign-in cookie does.
 const mooHost: Handle = async ({ event, resolve }) => {
 	// the Host header, not event.url: with ORIGIN set, adapter-node builds the url from that
 	const host = event.request.headers.get('x-forwarded-host') ?? event.request.headers.get('host') ?? '';

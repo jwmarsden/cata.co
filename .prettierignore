@@ -8,5 +8,5 @@ bun.lockb
 # Miscellaneous
 /static/
 
-# copied from MooMoo (scripts/sync-moomoo.mjs)
-/src/lib/moomoo/
+# copied from moocat (scripts/sync-moocat.mjs)
+/src/lib/moocat/

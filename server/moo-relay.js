@@ -1,6 +1,6 @@
 // The WebSocket <-> telnet relay behind /moo. A browser can't open a TCP
 // connection, so the page opens a WebSocket here and this passes its bytes to
-// the MOO and back, untouched (MooMoo does the telnet).
+// the MOO and back, untouched (moocat does the telnet).
 //
 // Anyone may use /moo, so the relay's job is to be no use for anything else:
 //  - it reaches only the worlds in moo-worlds.js, chosen by name, never by a

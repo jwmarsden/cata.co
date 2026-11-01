@@ -1,5 +1,5 @@
 // @ts-nocheck
-// MooMoo in a web page: the same session (backend/core.js) and the same page
+// moocat in a web page: the same session (backend/core.js) and the same page
 // (frontend/app.js), with the tinyjs bridge played by this file. A browser
 // can't open a telnet connection itself, so the host page supplies open(world),
 // a WebSocket to a relay that passes bytes to the MOO and back. SMud graphics
@@ -8,7 +8,7 @@
 //   import { startWeb } from '.../web/web.js';
 //   await startWeb({ root, worlds, open, hint });
 //
-// root: the element to fill with MooMoo's page. worlds: [{ name, smud, ... }]
+// root: the element to fill with moocat's page. worlds: [{ name, smud, ... }]
 // (no editing here). open(world) => a WebSocket, open, binaryType arraybuffer.
 // hint: a line to show under the MOO's welcome (how to log in), if any.
 // themes: the colour themes to offer, the default first (see app.js).
@@ -146,8 +146,8 @@ export async function startWeb({ root, worlds, open, hint = '', themes }) {
   // --- the page -------------------------------------------------------------
 
   root.innerHTML = MARKUP;
-  root.classList.add('moomoo-web');
-  if (themes) globalThis.moomooThemes = themes;
+  root.classList.add('moocat-web');
+  if (themes) globalThis.moocatThemes = themes;
   await import('../frontend/app.js');
   return { api };
 }

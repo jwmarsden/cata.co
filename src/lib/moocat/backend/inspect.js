@@ -2,14 +2,14 @@
 // Reading an object off the MOO for the object tab: name, description,
 // properties and verbs (its own and inherited). Sends one `;;` eval, so it
 // needs a programmer; the program notify()s one line per item, each
-// "MOOMOO:<tag> <kind> <MOO literal>", which this catches and hides, along
+// "MOOCAT:<tag> <kind> <MOO literal>", which this catches and hides, along
 // with the eval's own "=> 0" after it. No I/O here, so it can be tested.
 //
 //   const ins = new Inspector({ send(line) })
 //   ins.inspect('#123') -> Promise<object>   (rejects on timeout)
 //   ins.line(text) -> true if the line was ours (don't show it)
 
-const PREFIX = 'MOOMOO:';
+const PREFIX = 'MOOCAT:';
 const TIMEOUT = 15000;
 
 // A MOO literal (toliteral() output) -> JS: strings, numbers, lists as
@@ -141,7 +141,7 @@ export class Inspector {
       }
       return false;
     }
-    const m = /^MOOMOO:(\w+) (\w+) (.*)$/.exec(text);
+    const m = /^MOOCAT:(\w+) (\w+) (.*)$/.exec(text);
     const p = m && this.pending.get(m[1]);
     if (!p) return true;  // a reply we've given up on
     let v;

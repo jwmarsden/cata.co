@@ -1,5 +1,5 @@
 // @ts-nocheck
-// MooMoo's page for the web: frontend/index.html's body. Written by
+// moocat's page for the web: frontend/index.html's body. Written by
 // tools/web-markup.py from index.html: don't edit, run that.
 export const MARKUP = `
 

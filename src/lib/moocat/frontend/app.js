@@ -16,21 +16,22 @@ const store = {
 // --- colour themes --------------------------------------------------------
 // Sets of colours in style.css, chosen by data-moo-theme on <html>. Each app
 // lists them in its own order, its default first: the desktop app this one,
-// the web version (web.js) its own, set as moomooThemes before this loads.
+// the web version (web.js) its own, set as moocatThemes before this loads.
 
 const THEME_NAMES = { 'tokyo-night': 'Tokyo Night', cata: 'Cata' };
-const themes = (globalThis.moomooThemes ?? ['tokyo-night', 'cata']).filter((t) => t in THEME_NAMES);
+const themes = (globalThis.moocatThemes ?? ['tokyo-night', 'cata']).filter((t) => t in THEME_NAMES);
 
 function setTheme(theme, save = true) {
   if (!themes.includes(theme)) theme = themes[0];
   document.documentElement.dataset.mooTheme = theme;
   $('theme').value = theme;
-  if (save) store.set('moomoo-theme', theme);
+  if (save) store.set('moocat-theme', theme);
 }
 
 $('theme').innerHTML = themes.map((t) => `<option value="${t}">${THEME_NAMES[t]}</option>`).join('');
 $('theme').addEventListener('change', (ev) => setTheme(ev.target.value));
-setTheme(store.get('moomoo-theme', themes[0]), false);
+// (it was called moomoo-theme before the rename)
+setTheme(store.get('moocat-theme', store.get('moomoo-theme', themes[0])), false);
 
 // --- output -------------------------------------------------------------
 
@@ -116,7 +117,7 @@ function setState({ connected: c, world, mcp }) {
   st.className = !c ? '' : mcp === 'edit' ? 'edit' : 'on';
   $('statusText').textContent = !c ? 'Not connected'
     : world + (mcp === 'edit' ? ' · MCP editing' : mcp === 'up' ? ' · MCP' : '');
-  tiny.win.setTitle(c ? `MooMoo — ${world}` : 'MooMoo');
+  tiny.win.setTitle(c ? `moocat — ${world}` : 'moocat');
   worldName = c ? world : null;
   renderTabs();
   $('send').disabled = !c;
@@ -647,7 +648,7 @@ async function start() {
   activate(null);
   fitInput();
   input.focus();
-  addLines([{ text: 'MooMoo: pick a world and Connect. On the MOO, @edito +local once, then @edit a verb.', kind: 'sys' }]);
+  addLines([{ text: 'moocat: pick a world and Connect. On the MOO, @edito +local once, then @edit a verb.', kind: 'sys' }]);
 }
 
 start().catch((e) => addLines([{ text: 'start failed: ' + e, kind: 'err' }]));

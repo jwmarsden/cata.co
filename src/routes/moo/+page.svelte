@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import '$lib/moomoo/frontend/style.css';
-	import '$lib/moomoo/web/web.css';
+	import '$lib/moocat/frontend/style.css';
+	import '$lib/moocat/web/web.css';
 
 	let { data } = $props();
 	let root: HTMLElement | undefined = $state();
@@ -27,7 +27,7 @@
 
 	onMount(async () => {
 		if (!root) return;
-		const { startWeb } = await import('$lib/moomoo/web/web.js');
+		const { startWeb } = await import('$lib/moocat/web/web.js');
 		await startWeb({
 			root,
 			// the relay connects by name; host and port are only shown
@@ -41,7 +41,7 @@
 </script>
 
 <svelte:head>
-	<title>MooMoo</title>
+	<title>moocat</title>
 	<!-- the Cata theme's fonts, as the rest of the site has them -->
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
