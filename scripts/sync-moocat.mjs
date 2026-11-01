@@ -10,7 +10,7 @@ const to = path.join(import.meta.dirname, '../src/lib/moocat');
 
 // what web/web.js needs: the session (not main.js, the tinyjs host) and the page
 const files = {
-	backend: ['core.js', 'inspect.js', 'mcp.js', 'smud.js', 'telnet.js'],
+	backend: ['core.js', 'inspect.js', 'mcp.js', 'sessions.js', 'smud.js', 'telnet.js'],
 	frontend: ['ansi.js', 'app.js', 'canvas.js', 'moo.js', 'style.css'],
 	web: ['markup.js', 'web.css', 'web.js'],
 };
