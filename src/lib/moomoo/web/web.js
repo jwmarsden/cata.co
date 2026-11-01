@@ -11,11 +11,12 @@
 // root: the element to fill with MooMoo's page. worlds: [{ name, smud, ... }]
 // (no editing here). open(world) => a WebSocket, open, binaryType arraybuffer.
 // hint: a line to show under the MOO's welcome (how to log in), if any.
+// themes: the colour themes to offer, the default first (see app.js).
 import { createSession } from '../backend/core.js';
 import { SmudCanvas } from '../frontend/canvas.js';
 import { MARKUP } from './markup.js';
 
-export async function startWeb({ root, worlds, open, hint = '' }) {
+export async function startWeb({ root, worlds, open, hint = '', themes }) {
   const listeners = new Map();  // event -> [fn]
   const push = (event, data) => { for (const fn of listeners.get(event) ?? []) fn(data); };
   const panels = new Map();     // window id -> panel
@@ -146,6 +147,7 @@ export async function startWeb({ root, worlds, open, hint = '' }) {
 
   root.innerHTML = MARKUP;
   root.classList.add('moomoo-web');
+  if (themes) globalThis.moomooThemes = themes;
   await import('../frontend/app.js');
   return { api };
 }

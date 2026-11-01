@@ -7,7 +7,9 @@
 //    host or port from the client;
 //  - only this site's pages can open it (Origin), and only with a one-time
 //    ticket from /moo/ticket, which lives 30 seconds and works only from the
-//    IP address that asked for it;
+//    browser that asked for it: it comes back as a cookie too, sent only
+//    here, and the two must match (IP addresses can't do this: a browser may
+//    ask over IPv6 and connect over IPv4, and proxies muddle them);
 //  - each IP address gets a few connections, the whole relay a fixed number;
 //  - what goes to the MOO is rate limited (typing and @edit fit easily), and
 //    connections where nothing is typed for hours are closed.
@@ -24,6 +26,7 @@ import { clientIp } from './moo-ip.js';
 
 export const RELAY_PATH = '/moo/relay';
 export const TICKET_PREFIX = 'moo:ticket:';
+export const TICKET_COOKIE = 'moo_ticket';
 
 const MAX_PER_IP = 3;
 const MAX_TOTAL = 50;
@@ -50,15 +53,18 @@ export function attachRelay(server, { redisUrl, addressHeader = '', xffDepth = 1
 	server.on('upgrade', async (req, socket, head) => {
 		const url = new URL(req.url ?? '/', 'http://x');
 		if (url.pathname !== RELAY_PATH) return; // someone else's (Vite's HMR, say)
-		/** @param {number} code @param {string} text */
-		const refuse = (code, text) => {
+		/** @param {number} code @param {string} text @param {string} [why] */
+		const refuse = (code, text, why = '') => {
+			console.log(`[moo-relay] refused ${code}${why ? ': ' + why : ''}`);
 			socket.end(`HTTP/1.1 ${code} ${text}\r\nConnection: close\r\nContent-Length: 0\r\n\r\n`);
 		};
-		if (!sameOrigin(req)) return refuse(403, 'Forbidden');
+		if (!sameOrigin(req)) return refuse(403, 'Forbidden', `origin ${req.headers.origin ?? 'none'} for host ${req.headers.host}`);
 		const ip = clientIp(req, { addressHeader, xffDepth });
-		if (!ip) return refuse(400, 'Bad Request');
+		if (!ip) return refuse(400, 'Bad Request', `no client address (ADDRESS_HEADER ${addressHeader || 'unset'})`);
 		const id = url.searchParams.get('ticket') ?? '';
-		if (!/^[0-9a-f-]{36}$/.test(id)) return refuse(401, 'Unauthorized');
+		if (!/^[0-9a-f-]{36}$/.test(id)) return refuse(401, 'Unauthorized', 'no ticket');
+		// the same browser: its ticket cookie (from /moo/ticket) is this ticket
+		if (cookie(req, TICKET_COOKIE) !== id) return refuse(401, 'Unauthorized', 'ticket cookie missing or different');
 		let ticket;
 		try {
 			const res = await redis.multi().get(TICKET_PREFIX + id).del(TICKET_PREFIX + id).exec();
@@ -68,11 +74,11 @@ export function attachRelay(server, { redisUrl, addressHeader = '', xffDepth = 1
 			console.error('[moo-relay] ticket', /** @type {Error} */ (err).message);
 			return refuse(503, 'Service Unavailable');
 		}
-		// a ticket works only from where it was asked for
-		const world = ticket && ticket.ip === ip && mooWorld(ticket.world);
-		if (!world) return refuse(401, 'Unauthorized');
-		if ((perIp.get(ip) ?? 0) >= MAX_PER_IP) return refuse(429, 'Too Many Requests');
-		if (total >= MAX_TOTAL) return refuse(503, 'Service Unavailable');
+		if (!ticket) return refuse(401, 'Unauthorized', 'no such ticket (used, or over 30 s old)');
+		const world = mooWorld(ticket.world);
+		if (!world) return refuse(401, 'Unauthorized', `no world ${ticket.world}`);
+		if ((perIp.get(ip) ?? 0) >= MAX_PER_IP) return refuse(429, 'Too Many Requests', `${ip} has ${MAX_PER_IP} open`);
+		if (total >= MAX_TOTAL) return refuse(503, 'Service Unavailable', `${MAX_TOTAL} open in all`);
 		// counted now, not once the upgrade completes, so a burst can't slip past;
 		// released when the connection ends, or if the handshake fails
 		take(ip);
@@ -186,6 +192,15 @@ export function attachRelay(server, { redisUrl, addressHeader = '', xffDepth = 1
 	}
 
 	return wss;
+}
+
+/** @param {import('node:http').IncomingMessage} req @param {string} name */
+function cookie(req, name) {
+	for (const part of String(req.headers.cookie ?? '').split(';')) {
+		const [k, ...v] = part.trim().split('=');
+		if (k === name) return decodeURIComponent(v.join('='));
+	}
+	return null;
 }
 
 // The ticket is what counts; this turns away other sites' pages, which a

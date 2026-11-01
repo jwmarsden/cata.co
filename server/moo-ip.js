@@ -1,9 +1,10 @@
-// Who's asking: the client's IP address, worked out as adapter-node's
-// getClientAddress() does, so a ticket made by /moo/ticket (which uses that)
-// and the relay agree. Behind a reverse proxy, set ADDRESS_HEADER (e.g.
-// X-Forwarded-For) and XFF_DEPTH (proxies in front of the app, usually 1);
-// without them every client looks like the proxy. The app must be reachable
-// only through that proxy, or anyone can write the header.
+// Who's asking: the client's IP address, for the relay's per-address limits
+// and its log, worked out as adapter-node's getClientAddress() does (which
+// /moo/ticket uses for its own limit). Behind a reverse proxy, set
+// ADDRESS_HEADER to the header with the client's address: CF-Connecting-IP
+// behind Cloudflare, or X-Forwarded-For with XFF_DEPTH (proxies in front of
+// the app, usually 1). Without it every client looks like the proxy. The app
+// must be reachable only through that proxy, or anyone can write the header.
 
 /**
  * @param {import('node:http').IncomingMessage} req

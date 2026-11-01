@@ -8,6 +8,7 @@ export const MARKUP = `
   <button id="connect">Connect</button>
   <button id="worlds" title="Add and edit worlds">Worlds…</button>
   <span id="status"><span class="dot"></span><span id="statusText">Not connected</span></span>
+  <select id="theme" title="Colour theme"></select>
 </header>
 
 <nav id="tabs"></nav>

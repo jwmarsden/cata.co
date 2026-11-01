@@ -34,12 +34,21 @@
 			worlds: data.worlds.map((w) => ({ ...w, tls: false, login: '' })),
 			open,
 			hint: 'Log in with: connect <name> <password>',
+			// the site's colours first; the desktop app's dark ones to pick
+			themes: ['cata', 'tokyo-night'],
 		});
 	});
 </script>
 
 <svelte:head>
 	<title>MooMoo</title>
+	<!-- the Cata theme's fonts, as the rest of the site has them -->
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+	<link
+		href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,600;0,700;1,400&family=DM+Mono&display=swap"
+		rel="stylesheet"
+	/>
 </svelte:head>
 
 <div bind:this={root}></div>

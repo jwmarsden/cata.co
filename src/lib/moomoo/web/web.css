@@ -5,12 +5,12 @@
 
 .smudpanel {
   position: fixed; display: flex; flex-direction: column;
-  background: #d8e9ec; border: 1px solid #7a9cc6; border-radius: 6px;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, .45); overflow: hidden;
+  background: #d8e9ec; border: 1px solid var(--panel-head); border-radius: 6px;
+  box-shadow: 0 8px 28px var(--shadow); overflow: hidden;
 }
 .smudpanel > header {
   display: flex; align-items: center; gap: 8px; padding: 3px 4px 3px 10px; border-bottom: 0;
-  background: #7a9cc6; color: #10213a; font: 13px system-ui, sans-serif;
+  background: var(--panel-head); color: var(--panel-head-fg); font: 13px var(--ui);
   cursor: move; user-select: none; touch-action: none;
 }
 .smudpanel > header .title { flex: 1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

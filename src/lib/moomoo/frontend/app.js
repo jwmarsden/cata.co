@@ -13,6 +13,25 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
 
+// --- colour themes --------------------------------------------------------
+// Sets of colours in style.css, chosen by data-moo-theme on <html>. Each app
+// lists them in its own order, its default first: the desktop app this one,
+// the web version (web.js) its own, set as moomooThemes before this loads.
+
+const THEME_NAMES = { 'tokyo-night': 'Tokyo Night', cata: 'Cata' };
+const themes = (globalThis.moomooThemes ?? ['tokyo-night', 'cata']).filter((t) => t in THEME_NAMES);
+
+function setTheme(theme, save = true) {
+  if (!themes.includes(theme)) theme = themes[0];
+  document.documentElement.dataset.mooTheme = theme;
+  $('theme').value = theme;
+  if (save) store.set('moomoo-theme', theme);
+}
+
+$('theme').innerHTML = themes.map((t) => `<option value="${t}">${THEME_NAMES[t]}</option>`).join('');
+$('theme').addEventListener('change', (ev) => setTheme(ev.target.value));
+setTheme(store.get('moomoo-theme', themes[0]), false);
+
 // --- output -------------------------------------------------------------
 
 const out = $('out');
