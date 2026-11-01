@@ -1,10 +1,10 @@
 import { error, redirect } from '@sveltejs/kit';
 import redis from '$lib/server/mem/redis';
 
-// Anyone with a GitHub account can sign in (for /moo); only the admin gets
-// /admin and the admin APIs. The admin is pinned by GitHub's numeric account
-// id, recorded the first time ADMIN_GITHUB_USERNAME signs in, so a later
-// rename (and someone else taking the old name) doesn't move it.
+// Only ADMIN_GITHUB_USERNAME can sign in (src/auth.ts), and these checks make
+// sure of it again: the admin is pinned by GitHub's numeric account id,
+// recorded the first time that username signs in, so a later rename (and
+// someone else taking the old name) doesn't move it.
 const ADMIN_KEY = 'auth:admin:github';
 
 export async function recordAdmin(providerAccountId: string) {

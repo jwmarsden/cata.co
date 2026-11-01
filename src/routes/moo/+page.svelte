@@ -1,7 +1,5 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { signIn } from '@auth/sveltekit/client';
-	import { resolve } from '$app/paths';
 	import '$lib/moomoo/frontend/style.css';
 	import '$lib/moomoo/web/web.css';
 
@@ -28,7 +26,7 @@
 	}
 
 	onMount(async () => {
-		if (!data.signedIn || !root) return;
+		if (!root) return;
 		const { startWeb } = await import('$lib/moomoo/web/web.js');
 		await startWeb({
 			root,
@@ -44,21 +42,4 @@
 	<title>MooMoo</title>
 </svelte:head>
 
-{#if data.signedIn}
-	<div bind:this={root}></div>
-{:else}
-	<main class="moo-signin">
-		<h1>MooMoo</h1>
-		<p>A MOO client, with SMud graphics. Sign in with GitHub to use it (nothing is done with your github, but if my server is going to make a connection its going to know who you are).</p>
-		<button onclick={() => signIn('github', { callbackUrl: '/moo' })}>Sign in with GitHub</button>
-		<p><a href={resolve('/')} data-sveltekit-reload>cata.co</a></p>
-	</main>
-{/if}
-
-<style>
-	.moo-signin {
-		max-width: 26rem; margin: 6rem auto; padding: 0 16px; text-align: center;
-		font: 15px system-ui, sans-serif;
-	}
-	.moo-signin button { padding: 8px 18px; font-size: 15px; }
-</style>
+<div bind:this={root}></div>

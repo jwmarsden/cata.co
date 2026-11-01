@@ -32,11 +32,11 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
 		maxAge: 30 * 24 * 60 * 60, // 30 days
 	},
 	callbacks: {
-		// anyone may sign in (for /moo); admin is decided per session below
+		// only the admin signs in (/moo needs no account); the admin is pinned
+		// by GitHub account id on first sign-in, and checked per session below
 		async signIn({ profile, account }: { profile?: any; account?: any }) {
-			if (account?.provider === 'github' && profile?.login === ADMIN_GITHUB_USERNAME) {
-				await recordAdmin(String(account.providerAccountId));
-			}
+			if (account?.provider !== 'github' || profile?.login !== ADMIN_GITHUB_USERNAME) return false;
+			await recordAdmin(String(account.providerAccountId));
 			return true;
 		},
 		async session({ session, user }: { session: any; user: any }) {
