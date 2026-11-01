@@ -184,6 +184,11 @@ $('connect').addEventListener('click', () => {
 
 async function connectWorld(w) {
   store.set('world', w.name);
+  const live = sessions.find((x) => x.world === w.name && (x.connected || x.connecting));
+  if (live) {
+    activate(live, null);
+    return say(`Already ${live.connected ? 'connected' : 'connecting'} to ${w.name}.`);
+  }
   const dropped = (s) => s && !s.connected && s.world === w.name;
   const again = dropped(current) ? current : sessions.find(dropped);
   let s = again;
@@ -191,7 +196,9 @@ async function connectWorld(w) {
     s = newSession(await call('open'), w.name);
     activate(s, null);
   }
+  s.connecting = true;
   try { await call('connect', { world: w, sid: s.sid }); } catch {}  // the session says why
+  s.connecting = false;
   if (s !== current) activate(s, null);
   renderTabs();
   input.focus();
@@ -930,6 +937,9 @@ $('worldSave').addEventListener('click', async () => {
   if (selIdx >= 0 && !form.reportValidity()) return;
   const bad = editing.find((w) => !w.name || !w.host || !(w.port > 0));
   if (bad) return tiny.dialog.alert('Each world needs a name, host and port.');
+  const key = (w) => w.name.toLowerCase();
+  const twice = editing.find((w, i) => editing.findIndex((x) => key(x) === key(w)) !== i);
+  if (twice) return tiny.dialog.alert(`There is already a world called "${twice.name}".`);
   worlds = editing;
   await call('saveWorlds', { worlds });
   if (worlds[selIdx]) store.set('world', worlds[selIdx].name);
