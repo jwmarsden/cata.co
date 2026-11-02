@@ -19,6 +19,7 @@
 // included) is never logged; only where connections came from and went, and
 // for how long.
 import net from 'node:net';
+import tls from 'node:tls';
 import Redis from 'ioredis';
 import { WebSocketServer } from 'ws';
 import { mooWorld } from './moo-worlds.js';
@@ -98,7 +99,7 @@ export function attachRelay(server, { redisUrl, addressHeader = '', xffDepth = 1
 
 	/**
 	 * @param {import('ws').WebSocket} ws
-	 * @param {{ name: string, host: string, port: number }} world
+	 * @param {{ name: string, host: string, port: number, tls?: boolean }} world
 	 * @param {string} ip
 	 */
 	function relay(ws, world, ip) {
@@ -107,7 +108,10 @@ export function attachRelay(server, { redisUrl, addressHeader = '', xffDepth = 1
 		let lastInput = Date.now();
 		console.log(`[moo-relay] ${ip} -> ${world.name} open (${total} open)`);
 
-		const moo = net.connect({ host: world.host, port: world.port });
+		// TLS worlds are checked against the system's CAs, as a browser would
+		const moo = world.tls
+			? tls.connect({ host: world.host, port: world.port, servername: world.host })
+			: net.connect({ host: world.host, port: world.port });
 		moo.setNoDelay(true);
 		moo.setKeepAlive(true, 60_000);
 
@@ -141,7 +145,7 @@ export function attachRelay(server, { redisUrl, addressHeader = '', xffDepth = 1
 			}
 			if (queue.length && !done) drainTimer = setTimeout(drain, 100);
 		};
-		moo.on('connect', drain);
+		moo.on(world.tls ? 'secureConnect' : 'connect', drain);
 
 		moo.on('data', (buf) => {
 			down += buf.length;
