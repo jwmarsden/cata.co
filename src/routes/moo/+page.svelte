@@ -39,12 +39,14 @@
 			// the site's colours first; the desktop app's dark ones to pick
 			themes: ['cata', 'tokyo-night'],
 		});
-		// the site's cube, top left, home to cata.co (web.css shows it on the Cata theme only)
+		// the site's cube, top left: cata.co's home page (web.css shows it on the Cata theme only)
 		const home = document.createElement('a');
 		home.href = '/';
 		home.className = 'moo-home';
-		home.title = 'CaTa';
-		home.dataset.sveltekitReload = ''; // a fresh page: no moocat styles left behind
+		home.title = 'CaTa (opens in a new tab)';
+		// a tab of its own, so the MOO sessions here carry on
+		home.target = '_blank';
+		home.rel = 'noopener';
 		root.querySelector('header')?.prepend(home);
 		cube = mount(LogoCube, { target: home });
 	});
