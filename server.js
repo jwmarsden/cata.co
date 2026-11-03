@@ -13,7 +13,7 @@ const server = http.createServer(handler);
 if (!process.env.ADDRESS_HEADER) {
 	console.warn('[moo-relay] ADDRESS_HEADER is not set: behind a proxy, every client will look like the proxy');
 }
-attachRelay(server, {
+const relay = attachRelay(server, {
 	redisUrl: process.env.REDIS_URL,
 	addressHeader: process.env.ADDRESS_HEADER,
 	xffDepth: Number(process.env.XFF_DEPTH ?? 1),
@@ -21,6 +21,7 @@ attachRelay(server, {
 server.listen(port, host, () => console.log(`Listening on http://${host}:${port}`));
 
 const shutdown = () => {
+	relay.shutdown('cata.co is restarting: connect again in a moment.');
 	server.close(() => process.exit(0));
 	server.closeAllConnections();
 	setTimeout(() => process.exit(0), 5000).unref();

@@ -50,6 +50,8 @@ export function attachRelay(server, { redisUrl, addressHeader = '', xffDepth = 1
 	/** @type {Map<string, number>} */
 	const perIp = new Map(); // ip -> open connections
 	let total = 0;
+	/** @type {Set<(reason: string, how?: { why?: string, code?: number, kill?: boolean }) => void>} */
+	const open = new Set(); // each connection's end(), for shutdown
 
 	server.on('upgrade', async (req, socket, head) => {
 		const url = new URL(req.url ?? '/', 'http://x');
@@ -105,7 +107,7 @@ export function attachRelay(server, { redisUrl, addressHeader = '', xffDepth = 1
 	function relay(ws, world, ip) {
 		const started = Date.now();
 		let up = 0, down = 0, alive = true, done = false;
-		let lastInput = Date.now();
+		let lastInput = Date.now(), lastOutput = Date.now();
 		console.log(`[moo-relay] ${ip} -> ${world.name} open (${total} open)`);
 
 		// TLS worlds are checked against the system's CAs, as a browser would
@@ -149,6 +151,7 @@ export function attachRelay(server, { redisUrl, addressHeader = '', xffDepth = 1
 
 		moo.on('data', (buf) => {
 			down += buf.length;
+			lastOutput = Date.now();
 			ws.send(buf, { binary: true });
 			if (ws.bufferedAmount > HIGH_WATER) {
 				moo.pause();
@@ -167,35 +170,55 @@ export function attachRelay(server, { redisUrl, addressHeader = '', xffDepth = 1
 			if (!drainTimer) drain();
 		});
 
-		/** @param {string} reason */
-		const end = (reason) => {
+		// reason: told to the browser (when it's still there) and logged; why:
+		// logged only, for closes the browser started or can't hear
+		/**
+		 * @param {string} reason
+		 * @param {{ why?: string, code?: number, kill?: boolean }} [how]
+		 */
+		const end = (reason, { why = '', code = 1000, kill = false } = {}) => {
 			if (done) return;
 			done = true;
+			open.delete(end);
 			clearInterval(ping);
 			if (drainTimer) clearTimeout(drainTimer);
 			release(ip);
 			moo.destroy();
-			if (ws.readyState === ws.OPEN) ws.close(1000, reason.slice(0, 120));
-			const secs = Math.round((Date.now() - started) / 1000);
-			console.log(`[moo-relay] ${ip} -> ${world.name} closed after ${secs}s (${up} up, ${down} down)${reason ? ': ' + reason : ''}`);
+			if (kill) ws.terminate();
+			else if (ws.readyState === ws.OPEN) ws.close(code, reason.slice(0, 120));
+			const now = Date.now();
+			const s = (/** @type {number} */ t) => `${Math.round((now - t) / 1000)}s`;
+			console.log(`[moo-relay] ${ip} -> ${world.name} closed after ${s(started)} ` +
+				`(${up} up, ${down} down; last typed ${s(lastInput)} ago, last from the MOO ${s(lastOutput)} ago): ` +
+				(why || reason || 'no reason'));
 		};
-		moo.on('error', (/** @type {NodeJS.ErrnoException} */ err) => end(`Couldn't reach ${world.name}: ${err.code ?? err.message}`));
-		moo.on('close', () => end(`${world.name} closed the connection.`));
-		ws.on('close', () => end(''));
-		ws.on('error', () => end(''));
+		open.add(end);
+		moo.on('error', (/** @type {NodeJS.ErrnoException} */ err) =>
+			end(`Couldn't reach ${world.name}: ${err.code ?? err.message}`, { why: `MOO socket error ${err.code ?? err.message}` }));
+		moo.on('close', () => end(`${world.name} closed the connection.`, { why: 'the MOO closed it' }));
+		ws.on('close', (code, why) =>
+			end('', { why: `the browser closed it (code ${code}${why.length ? ', ' + why.toString() : ''})` }));
+		ws.on('error', (err) => end('', { why: `browser socket error: ${err.message}` }));
 
 		// browsers don't ping; proxies drop quiet sockets. And nothing typed
 		// for IDLE_MS: close, so abandoned tabs don't hold places.
 		ws.on('pong', () => { alive = true; });
 		const ping = setInterval(() => {
 			if (Date.now() - lastInput > IDLE_MS) return end('Closed after two hours with nothing typed.');
-			if (!alive) { ws.terminate(); return; }
+			if (!alive) return end('', { why: `no answer to a ping in ${PING_MS / 1000}s: the browser or the network went away`, kill: true });
 			alive = false;
 			ws.ping();
 		}, PING_MS);
 	}
 
-	return wss;
+	// before the server stops (a deploy): tell each browser, so it can say so
+	/** @param {string} reason */
+	const shutdown = (reason) => {
+		console.log(`[moo-relay] shutting down with ${open.size} open`);
+		for (const end of [...open]) end(reason, { why: 'the server is shutting down', code: 1012 });
+	};
+
+	return Object.assign(wss, { shutdown });
 }
 
 /** @param {import('node:http').IncomingMessage} req @param {string} name */
