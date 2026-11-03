@@ -22,7 +22,7 @@
 // }
 import { Mcp } from './mcp.js';
 import { Telnet } from './telnet.js';
-import { Inspector } from './inspect.js';
+import { Inspector, checkLiteral, literalType, parseLiteral } from './inspect.js';
 import { HELLO, parseOob, oobLine } from './smud.js';
 
 const enc = new TextEncoder();
@@ -290,6 +290,27 @@ export function createSession(host) {
     inspect({ obj }) {
       if (!conn) throw new Error('not connected');
       return inspector.inspect(obj);
+    },
+
+    // The property editor's: a property read whole, set (or cleared, literal
+    // null) if unchanged since, and an object's name (see inspect.js).
+    readProp({ obj, prop }) {
+      if (!conn) throw new Error('not connected');
+      return inspector.readProp(obj, prop);
+    },
+    writeProp({ obj, prop, literal, expect }) {
+      if (!conn) throw new Error('not connected');
+      return inspector.writeProp(obj, prop, literal, expect);
+    },
+    objName({ obj }) {
+      if (!conn) throw new Error('not connected');
+      return inspector.objName(obj);
+    },
+    // What the editor's MOO literal box holds, checked: { literal (one
+    // line), value, type }; throws if it isn't a literal.
+    literal({ text }) {
+      const literal = checkLiteral(text);
+      return { literal, value: parseLiteral(literal), type: literalType(literal) };
     },
 
     // Would @edit come here (MCP simpleedit, local editing on), or open the

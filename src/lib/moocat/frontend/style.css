@@ -358,3 +358,22 @@ dialog .row label:first-child { flex: 1; }
 dialog label.check { flex-direction: row; align-items: center; gap: 6px; padding-bottom: 6px; }
 dialog .hint { margin: 0; color: var(--dim); font-size: 11px; }
 dialog footer { display: flex; gap: 6px; margin-top: 14px; }
+
+/* property editor */
+#propDialog { width: min(680px, 92vw); }
+#propDialog h2 { font-family: var(--mono); font-weight: 600; overflow-wrap: anywhere; }
+#propMeta { margin: -6px 0 10px; }
+#propBody textarea, #propBody input, #propBody select, #propBody pre {
+  width: 100%; font: 12.5px var(--mono); color: var(--fg);
+  background: var(--input-bg, var(--bg-dark)); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px;
+}
+#propBody textarea { min-height: 6em; max-height: 60vh; resize: vertical; white-space: pre-wrap; }
+#propBody textarea.big { min-height: 16em; }
+#propBody pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 50vh; overflow: auto; }
+#propBody label.check { padding: 4px 0; }
+#propBody .objname { margin: 4px 0 0; }
+#propBody .objname.bad { color: var(--red); }
+#propRaw { margin-top: 8px; }
+#propMsg { margin: 8px 0 0; min-height: 1.2em; font-size: 12px; color: var(--muted); }
+#propMsg.bad { color: var(--red); }
+#propDialog footer .spacer { flex: 1; }

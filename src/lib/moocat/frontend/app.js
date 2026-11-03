@@ -119,41 +119,55 @@ function addLines(s, lines) {
   if (resultWatch?.tab.session === s) watchResult(lines);
 }
 
-// @verbs output: the verb names become links that @edit them (as in the
-// object tab). Two shapes: the core's one line,
+// @verbs and @props output: verb names become links that @edit them (as
+// in the object tab), property names links to the property editor. Two
+// shapes of each: the core's one line,
 //   ;verbs(#5) => {"g*et t*ake", "moveto", ...}
-// and a table (a wizard's @verbs), a line naming the object, then rows:
+//   ;properties($thing) => {"drop_failed_msg", ...}
+// and a table (a wizard's @verbs and @props), a line naming the object, then rows:
 //   King Elect (#152): 3 verbs
 //      #  Names          Args            ...
 //      1  reset_board    this none this  ...
-// s.verbsOf is the object whose table is going by, until a line that isn't one.
-const CORE_VERBS = /^;verbs\((#\d+)\) => \{"/;
-const TABLE_HEAD = /\((#\d+)\): \d+ verbs?\b/;
-const TABLE_TOP = /^\s+#\s+Names\s/;
+// A table of verbs is the named object's; @props + goes on through the
+// ancestors with "(inherited)", but its values (and so what to edit) are
+// still the first object's. s.table: { what: 'verbs' | 'props', obj } while
+// one is going by.
+const CORE_LIST = /^;(verbs|properties)\((#\d+|\$\w+)\) => \{"/;
+const TABLE_HEAD = /\((#\d+)\): \d+ (verbs?|propert(?:y|ies))\b( \(inherited\))?/;
+const TABLE_TOP = /^\s+#\s+Names?\s/;
 const TABLE_ROW = /^\s+\d+  (\S+)/;
 
 function verbLinks(s, plain, div) {
   let m;
-  if ((m = CORE_VERBS.exec(plain))) {
-    s.verbsOf = null;
-    const obj = m[1];
-    linkIn(div, /"([^"]+)"/g, (x) => `${obj}:${verbName(x[1])}`);
+  if ((m = CORE_LIST.exec(plain))) {
+    s.table = null;
+    const obj = m[2];
+    if (m[1] === 'verbs') linkIn(div, /"([^"]+)"/g, (x) => ({ edit: `${obj}:${verbName(x[1])}` }));
+    else linkIn(div, /"([^"]+)"/g, (x) => ({ prop: `${obj}.${x[1]}` }));
   } else if ((m = TABLE_HEAD.exec(plain))) {
-    s.verbsOf = m[1];
-  } else if (s.verbsOf && TABLE_TOP.test(plain)) {
+    const what = m[2].startsWith('verb') ? 'verbs' : 'props';
+    // an inherited section of @props: still the object it began with
+    const obj = what === 'props' && m[3] && s.lastTable?.what === 'props' ? s.lastTable.obj : m[1];
+    s.table = s.lastTable = { what, obj };
+  } else if (s.table && TABLE_TOP.test(plain)) {
     // the column names
-  } else if (s.verbsOf && (m = TABLE_ROW.exec(plain))) {
-    // a first name cut short (name~) is no name to @edit by
-    const obj = s.verbsOf;
-    if (!m[1].endsWith('~')) linkIn(div, /^(\s+\d+  )(\S+)/, () => `${obj}:${verbName(m[1])}`);
+  } else if (s.table && (m = TABLE_ROW.exec(plain))) {
+    // a name cut short (name~) is no name to find it by
+    const { what, obj } = s.table;
+    if (!m[1].endsWith('~')) {
+      linkIn(div, /^(\s+\d+  )(\S+)/, () => (what === 'verbs' ? { edit: `${obj}:${verbName(m[1])}` } : { prop: `${obj}.${m[1]}` }));
+    }
   } else {
-    s.verbsOf = null;
+    s.table = null;
+    // the blank line between @props + sections keeps lastTable
+    if (plain.trim()) s.lastTable = null;
   }
 }
 
 // In div's text nodes (not those in a link already), each match of re -> a
-// link that @edits ref(match), its text the match's last group (or all of
-// it), any text before that group left as it was.
+// link: data-edit (@edit it) or data-prop (the property editor) from
+// ref(match), its text the match's last group (or all of it), any text
+// before that group left as it was.
 function linkIn(div, re, ref) {
   const walker = document.createTreeWalker(div, NodeFilter.SHOW_TEXT);
   const nodes = [];
@@ -167,8 +181,9 @@ function linkIn(div, re, ref) {
       parts.push(node.data.slice(last, start));
       const a = document.createElement('a');
       a.href = '#';
-      a.dataset.edit = ref(m);
-      a.title = '@edit ' + a.dataset.edit;
+      const r = ref(m);
+      if (r.edit) { a.dataset.edit = r.edit; a.title = '@edit ' + r.edit; }
+      else { a.dataset.prop = r.prop; a.title = 'Edit ' + r.prop; }
       a.textContent = label;
       parts.push(a);
       last = start + label.length;
@@ -203,16 +218,18 @@ tiny.api.on('partial', ({ sid, text }) => {
 });
 
 // links open in the browser, object numbers in an object tab (anywhere),
-// verbs in @verbs output with @edit in their session
+// verbs in @verbs output with @edit in their session, properties in @props
+// output in the property editor
 document.addEventListener('click', (ev) => {
-  const a = ev.target.closest('a[data-url], a[data-obj], #out a[data-edit]');
+  const a = ev.target.closest('a[data-url], a[data-obj], #out a[data-edit], #out a[data-prop]');
   if (!a) return;
   ev.preventDefault();
   if (a.dataset.url) tiny.app.shell.open(a.dataset.url);
   else if (a.dataset.obj) openObject(a.dataset.obj);
   else {
     const s = sessions.find((x) => x.el.contains(a));
-    if (s?.connected) editVerb(s, a.dataset.edit);
+    if (a.dataset.prop) openProp(s, ...propRef(a.dataset.prop));
+    else if (s?.connected) editVerb(s, a.dataset.edit);
   }
 });
 
@@ -865,7 +882,8 @@ function renderObject(t) {
     (d.notes.length ? `<p class="objerr">${d.notes.map(esc).join('<br>')}</p>` : '') +
     `<h2>Properties <span class="count">${ownProps} here, ${d.properties.length} in all</span></h2>` +
     groups(t, d.properties, (p) =>
-      `<tr><td class="pname">${esc(p.name)}</td><td class="val">${linkText(p.value)}</td>` +
+      `<tr><td class="pname"><a href="#" data-prop="${esc(d.obj)}.${esc(p.name)}" title="Edit ${esc(d.obj)}.${esc(p.name)}">${esc(p.name)}</a></td>` +
+      `<td class="val">${linkText(p.value)}</td>` +
       `<td>${objLink(p.owner)}</td><td class="perms">${esc(p.perms)}</td></tr>`,
       '<th>Name</th><th>Value</th><th>Owner</th><th>Perms</th>') +
     `<h2>Verbs <span class="count">${ownVerbs} here, ${d.verbs.length} in all</span></h2>` +
@@ -936,12 +954,271 @@ $('objview').addEventListener('click', (ev) => {
     openObject(active.obj);
     return;
   }
-  const a = ev.target.closest('a[data-edit]');
+  const a = ev.target.closest('a[data-edit], a[data-prop]');
   if (!a) return;
   ev.preventDefault();
   const s = active?.session;
-  if (s?.connected) editVerb(s, a.dataset.edit);
+  if (a.dataset.prop) openProp(s, ...propRef(a.dataset.prop));
+  else if (s?.connected) editVerb(s, a.dataset.edit);
 });
+
+// --- property editor ------------------------------------------------------
+// One property of one object in a popup, from the object tab or @props
+// output: read whole (the object tab's values are cut short), edited by its
+// type or as a MOO literal, and saved only if it's still what was read.
+
+const TYPE_NAMES = { 0: 'integer', 1: 'object', 2: 'string', 3: 'error', 4: 'list', 9: 'float', 10: 'map',
+                     12: 'anonymous object', 13: 'waif', 14: 'true/false' };
+const ERRORS = ('E_NONE E_TYPE E_DIV E_PERM E_PROPNF E_VERBNF E_VARNF E_INVIND E_RECMOVE E_MAXREC E_RANGE ' +
+                'E_ARGS E_NACC E_INVARG E_QUOTA E_FLOAT E_FILE E_EXEC E_INTRPT').split(' ');
+const mooStr = (t) => '"' + t.replace(/[\\"]/g, '\\$&') + '"';
+const propDlg = $('propDialog');
+
+// { s, obj, name, info (readProp's), expect (the literal to find on saving),
+//   kind (the editor showing), literal, value } or null
+let prop = null;
+
+// The editor for a value: by type, a list of strings as lines; the rest, and
+// a list of strings one of which holds a newline, as a MOO literal.
+function editorKind(type, value) {
+  if (type === 12 || type === 13 || (value == null && type !== 0)) return 'readonly';
+  const kinds = { 0: 'int', 9: 'float', 1: 'obj', 3: 'err', 14: 'bool', 2: 'str' };
+  if (kinds[type]) return kinds[type];
+  if (type === 4 && value.length && value.every((x) => typeof x === 'string' && !x.includes('\n'))) return 'lines';
+  return 'literal';
+}
+
+// A long list or map, one element to a line, nested ones too while they're
+// long; short ones as they are. Strings are kept whole.
+function pretty(literal, indent = '') {
+  if (literal.length + indent.length <= 76 || !/^[{[]/.test(literal)) return literal;
+  const parts = [];
+  let depth = 0, start = 1, i = 1;
+  for (; i < literal.length - 1; i++) {
+    const c = literal[i];
+    if (c === '"') { i++; while (i < literal.length && literal[i] !== '"') i += literal[i] === '\\' ? 2 : 1; }
+    else if (c === '{' || c === '[') depth++;
+    else if (c === '}' || c === ']') depth--;
+    else if (c === ',' && depth === 0) { parts.push(literal.slice(start, i).trim()); start = i + 1; }
+  }
+  const last = literal.slice(start, -1).trim();
+  if (last) parts.push(last);
+  if (!parts.length) return literal;
+  const inner = indent + '  ';
+  return literal[0] + '\n' + parts.map((x) => inner + pretty(x, inner)).join(',\n') + '\n' + indent + literal.at(-1);
+}
+
+async function openProp(s, obj, name) {
+  if (!s?.connected || !objLinks(s)) return;
+  prop = { s, obj, name, info: null };
+  $('propTitle').textContent = `${obj}.${name}`;
+  $('propMeta').textContent = '';
+  $('propBody').innerHTML = '<p class="dim">Reading…</p>';
+  $('propRaw').hidden = true;
+  $('propClear').hidden = true;
+  $('propSave').disabled = true;
+  propMsg('');
+  if (!propDlg.open) propDlg.showModal();
+  let info;
+  try {
+    info = await call('readProp', { sid: s.sid, obj, prop: name });
+  } catch (e) {
+    info = { err: String(e.message ?? e) };
+  }
+  if (prop?.obj !== obj || prop.name !== name) return;  // closed, or another opened
+  if (!info || info.err) {
+    $('propBody').innerHTML = '';
+    propMsg(`Couldn't read it: ${info?.err ?? 'no answer from the MOO'}` +
+            (info?.err === 'E_PERM' ? " (it isn't readable by you)" : ''), true);
+    return;
+  }
+  Object.assign(prop, { info, expect: info.literal });
+  const canWrite = info.wizard || info.owner === info.player || info.perms.includes('w');
+  $('propMeta').innerHTML = `${esc(TYPE_NAMES[info.type] ?? 'type ' + info.type)} · owner ${objLink(info.owner)} · ` +
+    `perms ${esc(info.perms || '—')}` + (info.clear ? ' · <b>inherited</b>: no value of its own' : '');
+  $('propClear').hidden = info.here || info.clear;
+  $('propSave').disabled = !canWrite;
+  $('propClear').disabled = !canWrite;
+  if (!canWrite) propMsg("Read-only: it isn't yours, and it isn't writable (w).");
+  showEditor(info.type, info.value, info.literal);
+}
+
+function propMsg(text, bad = false) {
+  $('propMsg').textContent = text;
+  $('propMsg').classList.toggle('bad', bad);
+}
+
+// Fills the body with the editor for this value (literal: as the MOO wrote it).
+function showEditor(type, value, literal, asLiteral = false) {
+  const kind = asLiteral ? 'literal' : editorKind(type, value);
+  Object.assign(prop, { kind, type, value, literal });
+  const body = $('propBody');
+  const raw = $('propLiteral');
+  $('propRaw').hidden = kind === 'readonly';
+  raw.checked = kind === 'literal';
+  // a value with no editor of its own can't leave the literal one
+  raw.disabled = kind === 'literal' && editorKind(type, value) === 'literal';
+  switch (kind) {
+    case 'readonly':
+      body.innerHTML = `<pre>${esc(literal)}</pre><p class="hint">A ${esc(TYPE_NAMES[type])} can't be edited here.</p>`;
+      $('propSave').disabled = true;
+      break;
+    case 'str':
+      body.innerHTML = '<textarea id="pv" spellcheck="false"></textarea>' +
+        '<p class="hint">One line: ANSI and SMud codes as written. Several lines are saved as a list of strings.</p>';
+      $('pv').value = value;
+      break;
+    case 'lines':
+      body.innerHTML = '<textarea id="pv" class="big" spellcheck="false"></textarea><p class="hint">A list of strings, one to a line.</p>';
+      $('pv').value = value.join('\n');
+      break;
+    case 'int': case 'float':
+      body.innerHTML = '<input id="pv" spellcheck="false" inputmode="decimal">';
+      $('pv').value = literal;
+      break;
+    case 'obj':
+      body.innerHTML = '<input id="pv" spellcheck="false" placeholder="#123"><p class="hint objname" id="pvName"></p>';
+      $('pv').value = value.obj;
+      $('pv').addEventListener('input', objPreview);
+      objPreview();
+      break;
+    case 'err':
+      body.innerHTML = `<select id="pv">${ERRORS.map((e) => `<option>${e}</option>`).join('')}</select>`;
+      $('pv').value = value.err;
+      break;
+    case 'bool':
+      body.innerHTML = '<label class="check"><input type="checkbox" id="pv"> true</label>';
+      $('pv').checked = value === true;
+      break;
+    default:
+      body.innerHTML = '<textarea id="pv" class="big" spellcheck="false"></textarea>' +
+        '<p class="hint">Any MOO value: {lists}, ["maps" -> 1], "strings", #objects, numbers, E_ERRORS. Laid out over lines as you like.</p>';
+      $('pv').value = pretty(literal);
+  }
+  $('pv')?.focus();
+}
+
+// the #123 box's object, named as you type
+let previewTimer = null;
+function objPreview() {
+  clearTimeout(previewTimer);
+  const el = $('pvName');
+  const o = $('pv').value.trim();
+  if (!/^#-?\d+$/.test(o)) { el.textContent = 'An object number: #123'; el.classList.add('bad'); return; }
+  previewTimer = setTimeout(async () => {
+    const p = prop;
+    const r = await call('objName', { sid: p.s.sid, obj: o }).catch(() => null);
+    if (prop !== p || $('pv')?.value.trim() !== o) return;
+    el.textContent = r?.valid ? plainText(r.name) || '(no name)' : `${o} isn't a valid object (it can still be saved)`;
+    el.classList.toggle('bad', !r?.valid);
+  }, 250);
+}
+
+// What the editor holds, as a MOO literal; null if there's nothing to save
+// (a question answered Cancel). Throws, saying why, if it can't be one.
+async function editorLiteral() {
+  const el = $('pv');
+  const v = el?.value ?? '';
+  switch (prop.kind) {
+    case 'str': {
+      if (!v.includes('\n')) return mooStr(v);
+      // a newline in a string property breaks the database: not that
+      const how = await choose('Several lines',
+        'A string property can\'t hold a newline. Save the lines as a list of strings, or joined into one line?',
+        [{ label: 'Cancel', value: null }, { label: 'Join them', value: 'join' },
+         { label: 'List of strings', value: 'list', primary: true }]);
+      if (!how) return null;
+      const lines = v.replace(/\n$/, '').split('\n');
+      return how === 'join' ? mooStr(lines.join(' ')) : `{${lines.map(mooStr).join(', ')}}`;
+    }
+    case 'lines':
+      return `{${v.replace(/\n$/, '').split('\n').map(mooStr).join(', ')}}`;
+    case 'int':
+      if (!/^-?\d+$/.test(v.trim())) throw new Error('Not a whole number.');
+      return v.trim();
+    case 'float': {
+      const t = v.trim();
+      if (!/^-?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i.test(t)) throw new Error('Not a number.');
+      return /[.e]/i.test(t) ? t : t + '.0';  // stays a float
+    }
+    case 'obj':
+      if (!/^#-?\d+$/.test(v.trim())) throw new Error('Not an object number: #123.');
+      return v.trim();
+    case 'err': return v;
+    case 'bool': return el.checked ? 'true' : 'false';
+    default:
+      return (await call('literal', { sid: prop.s.sid, text: v })).literal;
+  }
+}
+
+$('propLiteral').addEventListener('change', async (ev) => {
+  if (!prop?.info) return;
+  try {
+    if (ev.target.checked) {
+      const lit = await editorLiteral();
+      if (lit == null) { ev.target.checked = false; return; }
+      showEditor(prop.type, prop.value, lit, true);
+    } else {
+      const r = await call('literal', { sid: prop.s.sid, text: $('pv').value });
+      showEditor(r.type, r.value, r.literal);
+    }
+    propMsg('');
+  } catch (e) {
+    ev.target.checked = !ev.target.checked;
+    propMsg(String(e.message ?? e), true);
+  }
+});
+
+async function saveProp(clear = false) {
+  const p = prop;
+  if (!p?.info) return;
+  let literal = null;
+  if (!clear) {
+    try {
+      literal = await editorLiteral();
+    } catch (e) {
+      propMsg(String(e.message ?? e), true);
+      return;
+    }
+    if (literal == null) return;
+  }
+  $('propSave').disabled = $('propClear').disabled = true;
+  propMsg(clear ? 'Clearing…' : 'Saving…');
+  let r;
+  try {
+    r = await call('writeProp', { sid: p.s.sid, obj: p.obj, prop: p.name, literal, expect: p.expect });
+  } catch (e) {
+    r = { err: String(e.message ?? e) };
+  }
+  if (prop !== p) return;
+  $('propSave').disabled = $('propClear').disabled = false;
+  if (r.err) {
+    propMsg(`The MOO said ${r.err}` + (r.err === 'E_PERM' ? ": you can't write it." : '') +
+            (r.err === 'E_TYPE' ? ': it may only take some types.' : ''), true);
+  } else if (!r.ok) {
+    // someone (or some verb) changed it meanwhile: say what to, save again to overwrite
+    p.expect = r.literal;
+    propMsg(`It changed since you opened it, to ${r.literal.length > 120 ? r.literal.slice(0, 120) + '…' : r.literal}. ` +
+            'Save again to overwrite that, or Cancel.', true);
+  } else {
+    propDlg.close();
+    addLines(p.s, [{ text: `${clear ? 'Cleared' : 'Set'} ${p.obj}.${p.name}.`, kind: 'sys' }]);
+    if (active?.kind === 'obj' && active.obj === p.obj && active.session === p.s) openObject(p.obj);
+  }
+}
+
+$('propSave').addEventListener('click', () => saveProp());
+$('propClear').addEventListener('click', () => saveProp(true));
+// (its close event comes after close(): by then another may have opened)
+propDlg.addEventListener('close', () => { if (!propDlg.open) { prop = null; clearTimeout(previewTimer); } });
+// Enter in a one-line box saves; in a text box it's a newline
+$('propForm').addEventListener('keydown', (ev) => {
+  if (ev.key === 'Enter' && ev.target.tagName === 'INPUT' && ev.target.id === 'pv') { ev.preventDefault(); saveProp(); }
+  if ((ev.ctrlKey || ev.metaKey) && ev.key === 'Enter') { ev.preventDefault(); saveProp(); }
+});
+
+// "#152.state" -> [obj, name]
+const propRef = (ref) => { const i = ref.indexOf('.'); return [ref.slice(0, i), ref.slice(i + 1)]; };
 
 // --- worlds dialog ------------------------------------------------------
 
