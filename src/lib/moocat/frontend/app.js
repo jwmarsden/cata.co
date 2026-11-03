@@ -99,6 +99,7 @@ function addLines(s, lines) {
     const div = document.createElement('div');
     if (kind) div.className = kind;
     div.innerHTML = kind === 'me' ? esc(text) : ansiToHtml(text, { objects: objLinks(s) });
+    if (kind !== 'me' && objLinks(s)) verbLinks(s, plainText(text), div);
     frag.append(div);
   }
   s.el.append(frag);
@@ -116,6 +117,68 @@ function addLines(s, lines) {
     renderTabs();
   }
   if (resultWatch?.tab.session === s) watchResult(lines);
+}
+
+// @verbs output: the verb names become links that @edit them (as in the
+// object tab). Two shapes: the core's one line,
+//   ;verbs(#5) => {"g*et t*ake", "moveto", ...}
+// and a table (a wizard's @verbs), a line naming the object, then rows:
+//   King Elect (#152): 3 verbs
+//      #  Names          Args            ...
+//      1  reset_board    this none this  ...
+// s.verbsOf is the object whose table is going by, until a line that isn't one.
+const CORE_VERBS = /^;verbs\((#\d+)\) => \{"/;
+const TABLE_HEAD = /\((#\d+)\): \d+ verbs?\b/;
+const TABLE_TOP = /^\s+#\s+Names\s/;
+const TABLE_ROW = /^\s+\d+  (\S+)/;
+
+function verbLinks(s, plain, div) {
+  let m;
+  if ((m = CORE_VERBS.exec(plain))) {
+    s.verbsOf = null;
+    const obj = m[1];
+    linkIn(div, /"([^"]+)"/g, (x) => `${obj}:${verbName(x[1])}`);
+  } else if ((m = TABLE_HEAD.exec(plain))) {
+    s.verbsOf = m[1];
+  } else if (s.verbsOf && TABLE_TOP.test(plain)) {
+    // the column names
+  } else if (s.verbsOf && (m = TABLE_ROW.exec(plain))) {
+    // a first name cut short (name~) is no name to @edit by
+    const obj = s.verbsOf;
+    if (!m[1].endsWith('~')) linkIn(div, /^(\s+\d+  )(\S+)/, () => `${obj}:${verbName(m[1])}`);
+  } else {
+    s.verbsOf = null;
+  }
+}
+
+// In div's text nodes (not those in a link already), each match of re -> a
+// link that @edits ref(match), its text the match's last group (or all of
+// it), any text before that group left as it was.
+function linkIn(div, re, ref) {
+  const walker = document.createTreeWalker(div, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  for (let n; (n = walker.nextNode());) if (!n.parentElement.closest('a')) nodes.push(n);
+  for (const node of nodes) {
+    const parts = [];
+    let last = 0;
+    for (const m of node.data.matchAll(new RegExp(re.source, re.flags.replace('g', '') + 'g'))) {
+      const label = m.length > 1 ? m[m.length - 1] : m[0];
+      const start = m.index + m[0].lastIndexOf(label);
+      parts.push(node.data.slice(last, start));
+      const a = document.createElement('a');
+      a.href = '#';
+      a.dataset.edit = ref(m);
+      a.title = '@edit ' + a.dataset.edit;
+      a.textContent = label;
+      parts.push(a);
+      last = start + label.length;
+      if (!re.global) break;
+    }
+    if (!parts.length) continue;
+    parts.push(node.data.slice(last));
+    node.replaceWith(...parts.filter((x) => x !== ''));
+    if (!re.global) return;
+  }
 }
 
 // Show a session's output (or home's) in the output area.
@@ -139,13 +202,18 @@ tiny.api.on('partial', ({ sid, text }) => {
   if (s === shown()) $('partial').innerHTML = ansiToHtml(text, { objects: objLinks(s) });
 });
 
-// links open in the browser, object numbers in an object tab (anywhere)
+// links open in the browser, object numbers in an object tab (anywhere),
+// verbs in @verbs output with @edit in their session
 document.addEventListener('click', (ev) => {
-  const a = ev.target.closest('a[data-url], a[data-obj]');
+  const a = ev.target.closest('a[data-url], a[data-obj], #out a[data-edit]');
   if (!a) return;
   ev.preventDefault();
   if (a.dataset.url) tiny.app.shell.open(a.dataset.url);
-  else openObject(a.dataset.obj);
+  else if (a.dataset.obj) openObject(a.dataset.obj);
+  else {
+    const s = sessions.find((x) => x.el.contains(a));
+    if (s?.connected) editVerb(s, a.dataset.edit);
+  }
 });
 
 // --- connecting -----------------------------------------------------------
