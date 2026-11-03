@@ -1,10 +1,12 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { mount, onDestroy, onMount, unmount } from 'svelte';
+	import LogoCube from '$lib/components/LogoCube.svelte';
 	import '$lib/moocat/frontend/style.css';
 	import '$lib/moocat/web/web.css';
 
 	let { data } = $props();
 	let root: HTMLElement | undefined = $state();
+	let cube: ReturnType<typeof mount> | undefined;
 
 	// A WebSocket to the relay, open and ready, for one world.
 	async function open(world: { name: string }) {
@@ -37,11 +39,20 @@
 			// the site's colours first; the desktop app's dark ones to pick
 			themes: ['cata', 'tokyo-night'],
 		});
+		// the site's cube, top left, home to cata.co (web.css shows it on the Cata theme only)
+		const home = document.createElement('a');
+		home.href = '/';
+		home.className = 'moo-home';
+		home.title = 'CaTa';
+		home.dataset.sveltekitReload = ''; // a fresh page: no moocat styles left behind
+		root.querySelector('header')?.prepend(home);
+		cube = mount(LogoCube, { target: home });
 	});
+	onDestroy(() => cube && unmount(cube));
 </script>
 
 <svelte:head>
-	<title>moocat</title>
+	<title>Moocat</title>
 	<!-- the Cata theme's fonts, as the rest of the site has them -->
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />

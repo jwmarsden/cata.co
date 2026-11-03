@@ -9,6 +9,7 @@
 	import { House, BookOpen, Info, Menu, FileText, KeySquare } from 'lucide-svelte';
 	import Analytics from '$lib/components/Analytics.svelte';
 	import LogoCube from '$lib/components/LogoCube.svelte';
+	import MoocatIcon from '$lib/components/MoocatIcon.svelte';
 	let { children } = $props();
 </script>
 
@@ -34,6 +35,13 @@
 		<li>
 			<a href="/posts" class:active={page.url.pathname.startsWith('/posts')} class="flex items-center gap-1.5 text-sm">
 				<BookOpen size={14} />Posts
+			</a>
+		</li>
+		<li>
+			<!-- a full page load, not preloaded: moocat's page styles (header, button,
+			     input…) would otherwise land on this one -->
+			<a href="/moo" data-sveltekit-reload class="flex items-center gap-1.5 text-sm">
+				<MoocatIcon size={14} />Moocat
 			</a>
 		</li>
 		<li class="dropdown dropdown-end">
