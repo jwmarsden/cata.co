@@ -382,6 +382,11 @@ dialog footer { display: flex; gap: 6px; margin-top: 14px; }
 #propBody pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 50vh; overflow: auto; }
 #propBody label.check { padding: 4px 0; }
 #propBody .objname { margin: 4px 0 0; }
+/* a string's colours (colourPreview): as the output shows them */
+#pvPreview {
+  margin-top: 6px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px;
+  background: var(--bg); font: 12.5px/1.35 var(--mono); white-space: pre; overflow: auto; max-height: 40vh;
+}
 /* the literal box: see-through text over its highlighted copy (highlightBox) */
 #propBody .hlbox { position: relative; }
 #propBody .hlbox pre {

@@ -19,7 +19,9 @@ const HUH = /^I don't understand that\.?$/;
 
 // A MOO literal (toliteral() output) -> JS: strings, numbers, lists as
 // arrays, objects as { obj: '#n' }, errors as { err: 'E_X' }. Maps
-// ([k -> v], ToastStunt) become arrays of [k, v] pairs.
+// ([k -> v], ToastStunt) become arrays of [k, v] pairs. \e in a string is
+// an escape (ESC, chr(27)): toliteral() passes one through raw, which
+// escLiteral() turns into \e for the trip (see there).
 export function parseLiteral(s) {
   let i = 0;
   const ws = () => { while (s[i] === ' ') i++; };
@@ -30,6 +32,7 @@ export function parseLiteral(s) {
       let out = '';
       i++;
       while (i < s.length && s[i] !== '"') {
+        if (s[i] === '\\' && s[i + 1] === 'e') { out += '\x1b'; i += 2; continue; }
         if (s[i] === '\\') i++;
         out += s[i++];
       }
@@ -69,8 +72,33 @@ export function parseLiteral(s) {
   return v;
 }
 
-// A string as a MOO literal.
-export const mooString = (s) => '"' + String(s).replace(/[\\"]/g, '\\$&') + '"';
+// A string as a MOO literal (an ESC as \e, as parseLiteral reads it).
+export const mooString = (s) => '"' + String(s).replace(/[\\"]/g, '\\$&').replaceAll('\x1b', '\\e') + '"';
+
+// MOO code for the toliteral() of expr with each ESC as \e. A MOO string has
+// no escape for ESC ("\e" is "e"), a raw one is invisible in a textarea, and
+// the server drops one typed back in. ToastStunt's chr(); without it (LambdaMOO,
+// whose strings can't hold an ESC anyway) just the toliteral().
+export const escLiteral = (expr) => `\`strsub(toliteral(${expr}), chr(27), "\\\\e") ! E_VERBNF => toliteral(${expr})'`;
+
+// A literal (checkLiteral's) as MOO code: each \e in its strings as
+// " + chr(27) + ", the only way to write an ESC.
+export function escCode(literal) {
+  let out = '', i = 0;
+  while (i < literal.length) {
+    if (literal[i] !== '"') { out += literal[i++]; continue; }
+    let j = i + 1, str = '"';
+    while (j < literal.length && literal[j] !== '"') {
+      if (literal[j] === '\\' && literal[j + 1] === 'e') { str += '" + chr(27) + "'; j += 2; continue; }
+      const n = literal[j] === '\\' ? 2 : 1;
+      str += literal.slice(j, j + n);
+      j += n;
+    }
+    out += str + '"';
+    i = j + 1;
+  }
+  return out;
+}
 
 // An object as the editor names it: #123 or a $name, nothing else (it goes
 // into an eval).
@@ -149,7 +177,8 @@ export function program(obj, tag) {
     ' else for n in (ps)',
     '  ticks_left() < 4000 && suspend(0);',
     '  i = `property_info(o, n) ! ANY => {0, "?"}\';',
-    '  s = toliteral(`o.(n) ! ANY\'); length(s) > 300 && (s = s[1..300] + "...");',
+    // an ESC as \e, not raw: it would colour the object tab
+    `  s = ${escLiteral("`o.(n) ! ANY'")}; length(s) > 300 && (s = s[1..300] + "...");`,
     `  ${say('prop', '{x, n, i[1], i[2], s}')}`,
     ' endfor endif',
     ' vs = `verbs(x) ! ANY\';',
@@ -203,7 +232,7 @@ export class Inspector {
   // null for no answer.
   async readProp(obj, prop) {
     const [o, p] = [checkObj(obj), mooString(prop)];
-    const v = await this.ask(`{toliteral(${o}.(${p})), typeof(${o}.(${p})), property_info(${o}, ${p}), ` +
+    const v = await this.ask(`{${escLiteral(`${o}.(${p})`)}, typeof(${o}.(${p})), property_info(${o}, ${p}), ` +
                              `is_clear_property(${o}, ${p}), \`${p} in properties(${o}) ! ANY => 0', player, player.wizard}`);
     if (!Array.isArray(v)) return v;
     const [literal, type, [owner, perms], clear, here, player, wizard] = v;
@@ -218,8 +247,9 @@ export class Inspector {
   // { ok: true } or { ok: false, literal } (what it is now), or { err }.
   async writeProp(obj, prop, literal, expect) {
     const [o, p] = [checkObj(obj), mooString(prop)];
-    const set = literal == null ? `clear_property(${o}, ${p})` : `${o}.(${p}) = ${checkLiteral(literal)}`;
-    const v = await this.ask(`equal(toliteral(${o}.(${p})), ${mooString(expect)}) ? {1, ${set}} | {0, toliteral(${o}.(${p}))}`);
+    const set = literal == null ? `clear_property(${o}, ${p})` : `${o}.(${p}) = ${escCode(checkLiteral(literal))}`;
+    const now = escLiteral(`${o}.(${p})`);
+    const v = await this.ask(`equal(${now}, ${mooString(expect)}) ? {1, ${set}} | {0, ${now}}`);
     if (!Array.isArray(v)) return v ?? { err: 'no answer from the MOO' };
     return v[0] ? { ok: true } : { ok: false, literal: v[1] };
   }

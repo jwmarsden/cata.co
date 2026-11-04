@@ -1005,7 +1005,21 @@ const TYPE_NAMES = { 0: 'integer', 1: 'object', 2: 'string', 3: 'error', 4: 'lis
                      12: 'anonymous object', 13: 'waif', 14: 'true/false' };
 const ERRORS = ('E_NONE E_TYPE E_DIV E_PERM E_PROPNF E_VERBNF E_VARNF E_INVIND E_RECMOVE E_MAXREC E_RANGE ' +
                 'E_ARGS E_NACC E_INVARG E_QUOTA E_FLOAT E_FILE E_EXEC E_INTRPT').split(' ');
-const mooStr = (t) => '"' + t.replace(/[\\"]/g, '\\$&') + '"';
+// an ESC as \e, as the backend reads it (inspect.js's mooString)
+const mooStr = (t) => '"' + t.replace(/[\\"]/g, '\\$&').replaceAll('\x1b', '\\e') + '"';
+// The text editors show an ESC (an ANSI code's start, invisible) as \e, and
+// read \e back as one; a preview under them shows the colours.
+const showEsc = (t) => t.replaceAll('\x1b', '\\e');
+const readEsc = (t) => t.replaceAll('\\e', '\x1b');
+const PREVIEW_HINT = ' An ANSI code\'s ESC is \\e (\\e[1;31m red, \\e[0m back to normal), previewed below.';
+
+// Under a string's textarea: its lines in colour, when it has any (\e codes
+// or ToastCore's [red] tags).
+function colourPreview() {
+  const el = $('pvPreview'), v = $('pv').value;
+  el.hidden = !/\\e\[|\[[a-z]+\]/.test(v);
+  if (!el.hidden) el.innerHTML = v.split('\n').map((l) => `<div>${colourText(readEsc(l), { links: false }) || '​'}</div>`).join('');
+}
 const propDlg = $('propDialog');
 
 // { s, obj, name, info (readProp's), expect (the literal to find on saving),
@@ -1098,13 +1112,19 @@ function showEditor(type, value, literal, asLiteral = false) {
       $('propSave').disabled = true;
       break;
     case 'str':
-      body.innerHTML = '<textarea id="pv" spellcheck="false"></textarea>' +
-        '<p class="hint">One line: ANSI and SMud codes as written. Several lines are saved as a list of strings.</p>';
-      $('pv').value = value;
+      body.innerHTML = '<textarea id="pv" spellcheck="false"></textarea><div id="pvPreview" hidden></div>' +
+        '<p class="hint">One line: ANSI and SMud codes as written. Several lines are saved as a list of strings.' +
+        PREVIEW_HINT + '</p>';
+      $('pv').value = showEsc(value);
+      $('pv').addEventListener('input', colourPreview);
+      colourPreview();
       break;
     case 'lines':
-      body.innerHTML = '<textarea id="pv" class="big" spellcheck="false"></textarea><p class="hint">A list of strings, one to a line.</p>';
-      $('pv').value = value.join('\n');
+      body.innerHTML = '<textarea id="pv" class="big" spellcheck="false"></textarea><div id="pvPreview" hidden></div>' +
+        `<p class="hint">A list of strings, one to a line.${PREVIEW_HINT}</p>`;
+      $('pv').value = value.map(showEsc).join('\n');
+      $('pv').addEventListener('input', colourPreview);
+      colourPreview();
       break;
     case 'int': case 'float':
       body.innerHTML = '<input id="pv" spellcheck="false" inputmode="decimal">';
@@ -1166,7 +1186,7 @@ function objPreview() {
 // (a question answered Cancel). Throws, saying why, if it can't be one.
 async function editorLiteral() {
   const el = $('pv');
-  const v = el?.value ?? '';
+  const v = (prop.kind === 'str' || prop.kind === 'lines' ? readEsc : String)(el?.value ?? '');
   switch (prop.kind) {
     case 'str': {
       if (!v.includes('\n')) return mooStr(v);
