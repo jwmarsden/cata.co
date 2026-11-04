@@ -324,7 +324,41 @@ let draft = '';
 function fitInput() {
   input.style.height = 'auto';
   input.style.height = input.scrollHeight ? input.scrollHeight + 2 + 'px' : '';
+  maskInput();
 }
+
+// A login line's password shows as *s, each character as typed for
+// REVEAL_MS first. The textarea's text goes see-through over a copy with the
+// password starred (as the code editor's #hl), as a textarea can't style part
+// of its text.
+const REVEAL_MS = 500;
+const inputWrap = document.createElement('div');
+inputWrap.id = 'inputWrap';
+const inputMask = document.createElement('div');
+inputMask.id = 'inputMask';
+inputMask.setAttribute('aria-hidden', 'true');
+input.replaceWith(inputWrap);
+inputWrap.append(inputMask, input);
+let reveal = -1;   // the password character to show for now, by its index in the line
+let revealTimer = null;
+
+function maskInput() {
+  const m = LOGIN.exec(input.value);
+  inputWrap.classList.toggle('masked', !!m);
+  if (!m) return;
+  const at = m[1].length;
+  const pw = [...input.value.slice(at)].map((c, i) => at + i === reveal ? c : '*').join('');
+  inputMask.innerHTML = esc(m[1] + pw);
+  inputMask.scrollTop = input.scrollTop;
+}
+
+input.addEventListener('input', (ev) => {
+  clearTimeout(revealTimer);
+  // only a character just typed at the caret; a paste or a deletion shows nothing
+  reveal = ev.inputType === 'insertText' && ev.data?.length === 1 ? input.selectionStart - 1 : -1;
+  if (reveal >= 0) revealTimer = setTimeout(() => { reveal = -1; maskInput(); }, REVEAL_MS);
+});
+input.addEventListener('scroll', () => { inputMask.scrollTop = input.scrollTop; });
 
 function sendInput() {
   let text = input.value;
@@ -1060,7 +1094,7 @@ function showEditor(type, value, literal, asLiteral = false) {
   raw.disabled = kind === 'literal' && editorKind(type, value) === 'literal';
   switch (kind) {
     case 'readonly':
-      body.innerHTML = `<pre>${esc(literal)}</pre><p class="hint">A ${esc(TYPE_NAMES[type])} can't be edited here.</p>`;
+      body.innerHTML = `<pre class="mooHl">${highlightMoo(literal)}</pre><p class="hint">A ${esc(TYPE_NAMES[type])} can't be edited here.</p>`;
       $('propSave').disabled = true;
       break;
     case 'str':
@@ -1091,11 +1125,25 @@ function showEditor(type, value, literal, asLiteral = false) {
       $('pv').checked = value === true;
       break;
     default:
-      body.innerHTML = '<textarea id="pv" class="big" spellcheck="false"></textarea>' +
+      body.innerHTML = '<div class="hlbox"><pre class="mooHl" aria-hidden="true"></pre>' +
+        '<textarea id="pv" class="big" spellcheck="false"></textarea></div>' +
         '<p class="hint">Any MOO value: {lists}, ["maps" -> 1], "strings", #objects, numbers, E_ERRORS. Laid out over lines as you like.</p>';
       $('pv').value = pretty(literal);
+      highlightBox($('pv'));
   }
   $('pv')?.focus();
+}
+
+// Highlights a textarea's MOO as you type, as the code editor does: the
+// textarea's text is see-through, over a <pre> of the highlighted copy.
+function highlightBox(el) {
+  const back = el.previousElementSibling;
+  // a trailing newline is a line in the textarea but not in the <pre>
+  const draw = () => { back.innerHTML = highlightMoo(el.value) + (el.value.endsWith('\n') ? ' ' : ''); scroll(); };
+  const scroll = () => { back.scrollTop = el.scrollTop; back.scrollLeft = el.scrollLeft; };
+  el.addEventListener('input', draw);
+  el.addEventListener('scroll', scroll);
+  draw();
 }
 
 // the #123 box's object, named as you type
