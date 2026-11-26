@@ -3,7 +3,7 @@
 // local editing, object inspection and SMud graphics. The host (main.js for
 // the tinyjs app, src/web/web.js for a web page) gives it a way to connect
 // and somewhere to put things, and it pushes to the page:
-//   'out'     { lines: [{ text, kind }] }  kind: null | 'sys' | 'err'
+//   'out'     { lines: [{ text, kind }] }  kind: null | 'sys' | 'err' | 'disconnected'
 //   'partial' { text }        text after the last newline (a prompt), or ''
 //   'edit'    { id, name, reference, type, protocol, lines }
 //   'state'   { connected, world, mcp, prog }   mcp: 'none' | 'up' | 'edit'
@@ -36,6 +36,8 @@ const LOGIN = /^\s*co(?:n(?:n(?:e(?:c(?:t)?)?)?)?)?\s+(\S+)/i;
 // program. Not for guests: they can't, and Rupert asks a guest for a name
 // next, which the question would answer.
 const LOGGED_IN = /^\*\*\* .+ \*\*\*$/;
+// SGR codes (colours, reset) at the very start of a line
+const LEADING_ANSI = /^(?:\x1b\[[0-9;]*m)*/;
 
 export function createSession(host) {
   let conn = null;          // { link, world, hello, prog, login }  login: a login sent, its *** not seen yet
@@ -84,7 +86,13 @@ export function createSession(host) {
   const inspector = new Inspector({ send: sendLine });
 
   const telnet = new Telnet({
-    line(text) {
+    line(raw) {
+      // ANSI codes left at the start of a line by the one before (LambdaMOO's
+      // Color Player Class ends its output with ESC[0m and no newline) aren't
+      // part of it: an out-of-band line, an eval's answer or the connect
+      // message is read without them.
+      const lead = LEADING_ANSI.exec(raw)[0];
+      const text = raw.slice(lead.length);
       if (text.startsWith('#$# image: ')) {
         const msg = parseOob(text);
         if (msg) { smudLine(msg); return; }
@@ -93,7 +101,7 @@ export function createSession(host) {
       if (conn?.login && LOGGED_IN.test(text)) afterLogin();
       const r = mcp.line(text);
       if (r === 'hide') return;
-      out(r === 'unquote' ? text.slice(3) : text);
+      out(r === 'unquote' ? lead + text.slice(3) : raw);
     },
     reply(bytes) {
       if (conn) Promise.resolve(conn.link.write(new Uint8Array(bytes))).catch(() => {});
@@ -126,7 +134,7 @@ export function createSession(host) {
       conn = null;
       mcp.reset();
       closeAllGraphics();
-      out(`Disconnected from ${c.world.name}.`, 'sys');
+      out(`Disconnected from ${c.world.name}.`, 'disconnected');
       host.push('partial', { text: '' });
       state();
     }
@@ -248,7 +256,7 @@ export function createSession(host) {
       mcp.reset();
       closeAllGraphics();
       try { c.link.close(); } catch {}
-      out(`Disconnected from ${c.world.name}.`, 'sys');
+      out(`Disconnected from ${c.world.name}.`, 'disconnected');
       host.push('partial', { text: '' });
       state();
       return true;

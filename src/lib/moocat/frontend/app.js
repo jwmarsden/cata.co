@@ -90,16 +90,33 @@ out.addEventListener('scroll', () => {
 new ResizeObserver(() => { if (shown().follow) out.scrollTop = out.scrollHeight; }).observe(out);
 $('jump').addEventListener('click', toBottom);
 
+// The bell (^G in a line): a short tone, at most one per batch of lines.
+let audio = null;
+function beep() {
+  try {
+    audio ??= new AudioContext();
+    const osc = audio.createOscillator(), gain = audio.createGain();
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.15, audio.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.15);
+    osc.connect(gain).connect(audio.destination);
+    osc.start();
+    osc.stop(audio.currentTime + 0.15);
+  } catch {}
+}
+
 // Lines to a session (or to home, before any). Object numbers are links
 // only once the MOO has said the player can program (core.js asks).
 function addLines(s, lines) {
   s ??= home;
+  if (lines.some(({ text, kind }) => kind !== 'me' && text.includes('\x07'))) beep();
   const frag = document.createDocumentFragment();
   for (const { text, kind } of lines) {
     const div = document.createElement('div');
-    if (kind) div.className = kind;
+    if (kind) div.className = kind === 'disconnected' ? 'sys' : kind;
     div.innerHTML = kind === 'me' ? esc(text) : ansiToHtml(text, { objects: objLinks(s) });
     if (kind !== 'me' && objLinks(s)) verbLinks(s, plainText(text), div);
+    if (kind === 'disconnected') div.insertAdjacentHTML('beforeend', ' <a href="#" data-reconnect title="Connect again">Reconnect</a>');
     frag.append(div);
   }
   s.el.append(frag);
@@ -219,16 +236,17 @@ tiny.api.on('partial', ({ sid, text }) => {
 
 // links open in the browser, object numbers in an object tab (anywhere),
 // verbs in @verbs output with @edit in their session, properties in @props
-// output in the property editor
+// output in the property editor, Reconnect connects its session again
 document.addEventListener('click', (ev) => {
-  const a = ev.target.closest('a[data-url], a[data-obj], #out a[data-edit], #out a[data-prop]');
+  const a = ev.target.closest('a[data-url], a[data-obj], #out a[data-edit], #out a[data-prop], #out a[data-reconnect]');
   if (!a) return;
   ev.preventDefault();
   if (a.dataset.url) tiny.app.shell.open(a.dataset.url);
   else if (a.dataset.obj) openObject(a.dataset.obj);
   else {
     const s = sessions.find((x) => x.el.contains(a));
-    if (a.dataset.prop) openProp(s, ...propRef(a.dataset.prop));
+    if (a.hasAttribute('data-reconnect')) { if (s) reconnect(s); }
+    else if (a.dataset.prop) openProp(s, ...propRef(a.dataset.prop));
     else if (s?.connected) editVerb(s, a.dataset.edit);
   }
 });
@@ -256,6 +274,7 @@ tiny.api.on('state', ({ sid, connected, world, mcp, prog }) => {
   s.mcp = mcp;
   s.prog = prog;
   if (!connected) s.localEdit = false;  // a new login may differ
+  else s.el.querySelectorAll('a[data-reconnect]').forEach((a) => a.remove());  // back: they've done their job
   if (world) s.world = world;
   renderTabs();
   if (s === current) $('send').disabled = !connected;
@@ -287,6 +306,13 @@ async function connectWorld(w) {
   if (s !== current) activate(s, null);
   renderTabs();
   input.focus();
+}
+
+// A session's Reconnect link, or Enter on an empty line while it's disconnected.
+function reconnect(s) {
+  const w = findWorld(s.world);
+  if (w) connectWorld(w);
+  else say(`No world "${s.world}". ` + worldNames());
 }
 
 // The last one stays (to leave, close moocat).
@@ -375,6 +401,7 @@ function sendInput() {
   if (/^\/(?!\/)/.test(text)) { command(text.trim()); return; }
   if (text.startsWith('//')) text = text.slice(1);
   if (!s?.connected) {
+    if (s && !text.trim()) { reconnect(s); return; }
     addLines(s, [{ text: s ? 'Not connected: Connect to connect again.' : 'Not connected: pick a world and Connect.', kind: 'sys' }]);
     return;
   }
